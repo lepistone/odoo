@@ -66,6 +66,13 @@ class sale_order(osv.osv):
             val = val1 = 0.0
             cur = order.pricelist_id.currency_id
             for line in order.order_line:
+                # If state is 'cancel', the order has been fully
+                # canceled, we display the original agreed amount.
+                # Otherwise, we display the sum of all non-canceled
+                # lines so orders confirmed orders with a part of its
+                # lines canceled won't include canceled lines.
+                # Details:
+                # https://github.com/odoo/odoo/pull/6036#issuecomment-90415930
                 if order.state == 'cancel' or line.state != 'cancel':
                     val1 += line.price_subtotal
                     val += self._amount_line_tax(cr, uid, line, context=context)
