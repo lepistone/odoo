@@ -3369,7 +3369,7 @@ instance.web.form.CompletionFieldMixin = {
             });
 
             // search more... if more results that max
-            if (values.length > self.limit) {
+            if (self.options.always_show_search_more || values.length > self.limit) {
                 values = values.slice(0, self.limit);
                 values.push({
                     label: _t("Search More..."),
