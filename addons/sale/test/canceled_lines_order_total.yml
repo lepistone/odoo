@@ -1,0 +1,53 @@
+-
+  I create a draft Sale Order with 2 lines
+-
+  !record {model: sale.order, id: sale_order_cl_1}:
+    partner_id: base.res_partner_15
+    partner_invoice_id: base.res_partner_address_25
+    partner_shipping_id: base.res_partner_address_25
+    pricelist_id: product.list0
+    order_policy: manual
+-
+  !record {model: sale.order.line, id: sale_order_cl_1_line_1}:
+    order_id: sale_order_cl_1
+    product_id: product.product_product_27
+    product_uom_qty: 1
+    product_uom: 1
+    price_unit: 3645
+    name: 'Laptop Customized'
+-
+  !record {model: sale.order.line, id: sale_order_cl_1_line_2}:
+    order_id: sale_order_cl_1
+    product_id: product.product_product_12
+    product_uom_qty: 1
+    product_uom: 1
+    price_unit: 12.50
+    name: 'Mouse, Wireless'
+-
+  I check the total of the sale order
+-
+  !assert {model: sale.order, id: sale_order_cl_1, string: Sale order total should include all the lines}:
+    - amount_total == 3657.50
+    - state != 'cancel'
+-
+  I cancel one line
+-
+   !python {model: sale.order.line, id: sale_order_cl_1_line_1}: |
+     self.button_cancel()
+-
+  I check the total of the sale order, should not include the canceled line
+-
+  !assert {model: sale.order, id: sale_order_cl_1, string: Sale order total should not include the canceled line}:
+    - amount_total == 12.5
+    - state != 'cancel'
+-
+  I cancel the whole sale order
+-
+  !python {model: sale.order, id: sale_order_cl_1}: |
+    self.action_cancel()
+-
+  I check the total of the sale order which should be the total of all the canceled lines
+-
+  !assert {model: sale.order, id: sale_order_cl_1, string: Canceled sale order total should include all the canceled line}:
+    - amount_total == 3657.50
+    - state == 'cancel'
