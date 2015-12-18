@@ -14,6 +14,9 @@
 -
   !record {model: product.product, id: product.product_product_3, view: False}:
     taxes_id: [account_tax_10_incl]
+-
+  !python {model: product.product, id: product.product_product_3}: |
+    self.taxes_id = self.env.ref('point_of_sale.account_tax_10_incl')
 - |
   I create a VAT tax of 5%, which is added to the public price
 - 
@@ -38,7 +41,10 @@
 -
   !record {model: product.product, id: product.product_product_4, view: False}:
     taxes_id: [account_tax_05_incl, account_tax_05_incl_chicago]
-- 
+-
+  !python {model: product.product, id: product.product_product_4}: |
+    self.taxes_id = self.env.ref('point_of_sale.account_tax_05_incl') | self.env.ref('point_of_sale.account_tax_05_incl_chicago')
+-
   I click on create a new session button
 - 
   !python {model: pos.config}: |
