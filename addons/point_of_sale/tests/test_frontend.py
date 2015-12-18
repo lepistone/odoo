@@ -1,5 +1,6 @@
 
 import openerp.tests
+import pdb; pdb.set_trace()  # XXX BREAKPOINT
 
 @openerp.tests.common.at_install(False)
 @openerp.tests.common.post_install(True)
