@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-import common
-import db
-import model
-import report
-import wsgi_server
-import server
+from __future__ import absolute_import
+# -*- coding: utf-8 -*-
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
+
+from . import common
+from . import db
+from . import model
+from . import report
+from . import wsgi_server
+from . import server
 
 #.apidoc title: RPC Services
 

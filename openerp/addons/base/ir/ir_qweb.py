@@ -53,7 +53,7 @@ def raise_qweb_exception(etype=None, **kw):
     orig_type, original, tb = sys.exc_info()
     try:
         raise etype, original, tb
-    except etype, e:
+    except etype as e:
         for k, v in kw.items():
             e.qweb[k] = v
         # Will use `raise foo from bar` in python 3 and rename cause to __cause__
@@ -1487,7 +1487,7 @@ class JavascriptAsset(WebAsset):
     def _fetch_content(self):
         try:
             return super(JavascriptAsset, self)._fetch_content()
-        except AssetError, e:
+        except AssetError as e:
             return "console.error(%s);" % json.dumps(e.message)
 
     def to_html(self):
@@ -1535,7 +1535,7 @@ class StylesheetAsset(WebAsset):
                 content = self.rx_charset.sub('', content)
 
             return content
-        except AssetError, e:
+        except AssetError as e:
             self.bundle.css_errors.append(e.message)
             return ''
 

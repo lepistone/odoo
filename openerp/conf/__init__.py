@@ -14,8 +14,9 @@ To initialize properly this module, openerp.tools.config.parse_config()
 must be used.
 
 """
+from __future__ import absolute_import
 
-import deprecation
+from . import deprecation
 
 # Paths to search for OpenERP addons.
 addons_paths = []

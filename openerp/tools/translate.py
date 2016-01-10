@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from __future__ import absolute_import
 import codecs
 import csv
 import fnmatch
@@ -20,12 +21,13 @@ from lxml import etree
 from os.path import join
 from xml.sax.saxutils import escape
 
-import config
-import misc
-from misc import SKIPPED_ELEMENT_TYPES
-import osutil
+from . import config
+from . import misc
+from .misc import SKIPPED_ELEMENT_TYPES
+from . import osutil
 import openerp
 from openerp import SUPERUSER_ID
+from functools import reduce
 
 _logger = logging.getLogger(__name__)
 
@@ -510,7 +512,7 @@ class TinyPoFile(object):
                         raise StopIteration()
                     line = self.lines.pop(0)
                 # This has been a deprecated entry, don't return anything
-                return self.next()
+                return next(self)
 
             if not line.startswith('msgid'):
                 raise Exception("malformed file: bad line: %s" % line)
@@ -524,7 +526,7 @@ class TinyPoFile(object):
                 self.extra_lines = []
                 while line:
                     line = self.lines.pop(0).strip()
-                return self.next()
+                return next(self)
 
             while not line.startswith('msgstr'):
                 if not line:
@@ -551,7 +553,7 @@ class TinyPoFile(object):
             if not fuzzy:
                 self.warn('Missing "#:" formated comment at line %d for the following source:\n\t%s',
                         self.cur_line(), source[:30])
-            return self.next()
+            return next(self)
         return trans_type, name, res_id, source, trad, '\n'.join(comments)
 
     def write_infos(self, modules):
@@ -833,7 +835,7 @@ def trans_generate(lang, modules, cr):
         if model=='ir.model.fields':
             try:
                 field_name = encode(obj.name)
-            except AttributeError, exc:
+            except AttributeError as exc:
                 _logger.error("name error in %s: %s", xml_name, str(exc))
                 continue
             field_model = registry.get(obj.model)

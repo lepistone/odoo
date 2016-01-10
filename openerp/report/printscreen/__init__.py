@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-import ps_list
-import ps_form
+from __future__ import absolute_import
+# -*- coding: utf-8 -*-
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
+
+from . import ps_list
+from . import ps_form
 
 
 """ A special report, that is automatically formatted to look like the

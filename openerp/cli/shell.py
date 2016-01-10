@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from __future__ import print_function
 import code
 import os
 import signal
@@ -19,7 +20,7 @@ class Console(code.InteractiveConsole):
             import readline
             import rlcompleter
         except ImportError:
-            print 'readline or rlcompleter not available, autocomplete disabled.'
+            print('readline or rlcompleter not available, autocomplete disabled.')
         else:
             readline.set_completer(rlcompleter.Completer(locals).complete)
             readline.parse_and_bind("tab: complete")
@@ -34,12 +35,12 @@ class Shell(Command):
 
     def console(self, local_vars):
         if not os.isatty(sys.stdin.fileno()):
-            exec sys.stdin in local_vars
+            exec(sys.stdin, local_vars)
         else:
             if 'env' not in local_vars:
-                print 'No environment set, use `odoo.py shell -d dbname` to get one.'
+                print('No environment set, use `odoo.py shell -d dbname` to get one.')
             for i in sorted(local_vars):
-                print '%s: %s' % (i, local_vars[i])
+                print('%s: %s' % (i, local_vars[i]))
             Console(locals=local_vars).interact()
 
     def shell(self, dbname):

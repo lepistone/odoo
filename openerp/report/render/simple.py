@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-import render
+from __future__ import print_function
+from __future__ import absolute_import
+from . import render
 
 from cStringIO import StringIO
 import xml.dom.minidom
@@ -63,4 +65,4 @@ if __name__=='__main__':
         </author-list>
     </test>'''
     if s.render():
-        print s.get()
+        print(s.get())

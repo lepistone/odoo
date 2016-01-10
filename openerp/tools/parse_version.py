@@ -4,7 +4,9 @@
 ## this functions are taken from the setuptools package (version 0.6c8)
 ## http://peak.telecommunity.com/DevCenter/PkgResources#parsing-utilities
 
+from __future__ import print_function
 import re
+from functools import reduce
 
 component_re = re.compile(r'(\d+ | [a-z]+ | \.| -)', re.VERBOSE)
 replace = {'pre':'c', 'preview':'c','-':'final-','_':'final-','rc':'c','dev':'@','saas':'','~':''}.get
@@ -75,7 +77,7 @@ if __name__ == '__main__':
                 pv = parse_version(v)
                 pvs.append(pv)
                 if verbose:
-                    print v, pv
+                    print(v, pv)
             reduce(cmp, pvs)
         
         chk(('0', '4.2', '4.2.3.4', '5.0.0-alpha', '5.0.0-rc1', '5.0.0-rc1.1', '5.0.0_rc2', '5.0.0_rc3', '5.0.0'), False)

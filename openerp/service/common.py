@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import logging
 
 import openerp.release
 import openerp.tools
 from openerp.tools.translate import _
 
-import security
+from . import security
 
 _logger = logging.getLogger(__name__)
 

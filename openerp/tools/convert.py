@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from __future__ import absolute_import
 import cStringIO
 import csv
 import logging
@@ -20,16 +21,16 @@ import openerp
 import openerp.release
 import openerp.workflow
 
-import assertion_report
-import misc
+from . import assertion_report
+from . import misc
 
-from config import config
+from .config import config
 # List of etree._Element subclasses that we choose to ignore when parsing XML.
-from misc import SKIPPED_ELEMENT_TYPES
-from misc import unquote
+from .misc import SKIPPED_ELEMENT_TYPES
+from .misc import unquote
 from openerp import SUPERUSER_ID
-from translate import _
-from yaml_import import convert_yaml_import
+from .translate import _
+from .yaml_import import convert_yaml_import
 
 _logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ _logger = logging.getLogger(__name__)
 # almost everywhere, which is ok because it supposedly comes
 # from trusted data, but at least we make it obvious now.
 unsafe_eval = eval
-from safe_eval import safe_eval as eval
+from .safe_eval import safe_eval as eval
 
 class ParseError(Exception):
     def __init__(self, msg, text, filename, lineno):
@@ -803,7 +804,7 @@ form: module.record_id""" % (xml_id,)
             elif rec.tag in self._tags:
                 try:
                     self._tags[rec.tag](self.cr, rec, de, mode=mode)
-                except Exception, e:
+                except Exception as e:
                     self.cr.rollback()
                     exc_info = sys.exc_info()
                     raise ParseError, (misc.ustr(e), etree.tostring(rec).rstrip(), rec.getroottree().docinfo.URL, rec.sourceline), exc_info[2]
@@ -878,7 +879,7 @@ def convert_csv_import(cr, module, fname, csvcontent, idref=None, mode='init',
 
     input = cStringIO.StringIO(csvcontent) #FIXME
     reader = csv.reader(input, quotechar='"', delimiter=',')
-    fields = reader.next()
+    fields = next(reader)
     fname_partial = ""
     if config.get('import_partial'):
         fname_partial = module + '/'+ fname
@@ -891,7 +892,7 @@ def convert_csv_import(cr, module, fname, csvcontent, idref=None, mode='init',
                     return
                 else:
                     for i in range(data[fname_partial]):
-                        reader.next()
+                        next(reader)
 
     if not (mode == 'init' or 'id' in fields):
         _logger.error("Import specification does not contain 'id' and we are in init mode, Cannot continue.")

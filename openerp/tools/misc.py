@@ -5,6 +5,7 @@
 """
 Miscellaneous tools used by OpenERP.
 """
+from __future__ import absolute_import
 
 from functools import wraps
 import cProfile
@@ -22,7 +23,7 @@ import zipfile
 from collections import defaultdict, Hashable, Iterable, Mapping, OrderedDict
 from itertools import islice, izip, groupby
 from lxml import etree
-from which import which
+from .which import which
 from threading import local
 import traceback
 
@@ -31,8 +32,8 @@ try:
 except ImportError:
     html2text = None
 
-from config import config
-from cache import *
+from .config import config
+from .cache import *
 from .parse_version import parse_version 
 
 import openerp
@@ -396,7 +397,7 @@ class UpdateableDict(local):
         return self.dict.get(k, d)
 
     def has_key(self, k):
-        return self.dict.has_key(k)
+        return k in self.dict
 
     def items(self):
         return self.dict.items()
@@ -608,7 +609,7 @@ class profile(object):
         def wrapper(*args, **kwargs):
             profile = cProfile.Profile()
             result = profile.runcall(f, *args, **kwargs)
-            profile.dump_stats(self.fname or ("%s.cprof" % (f.func_name,)))
+            profile.dump_stats(self.fname or ("%s.cprof" % (f.__name__,)))
             return result
 
         return wrapper

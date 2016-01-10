@@ -163,7 +163,7 @@ class ir_http(osv.AbstractModel):
         try:
             rule, arguments = self._find_handler(return_rule=True)
             func = rule.endpoint
-        except werkzeug.exceptions.NotFound, e:
+        except werkzeug.exceptions.NotFound as e:
             return self._handle_exception(e)
 
         # check authentication level
@@ -182,7 +182,7 @@ class ir_http(osv.AbstractModel):
             result = request.dispatch()
             if isinstance(result, Exception):
                 raise result
-        except Exception, e:
+        except Exception as e:
             return self._handle_exception(e)
 
         return result
@@ -340,5 +340,5 @@ def convert_exception_to(to_type, with_message=False):
             message = str(with_message)
 
         raise to_type, message, tb
-    except to_type, e:
+    except to_type as e:
         return e

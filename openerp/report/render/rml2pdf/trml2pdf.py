@@ -2,14 +2,16 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 
+from __future__ import print_function
+from __future__ import absolute_import
 import sys
 import copy
 import reportlab
 import re
 from reportlab.pdfgen import canvas
 from reportlab import platypus
-import utils
-import color
+from . import utils
+from . import color
 import os
 import logging
 import traceback
@@ -30,7 +32,7 @@ except ImportError:
     from StringIO import StringIO
 
 try:
-    from customfonts import SetCustomFonts
+    from .customfonts import SetCustomFonts
 except ImportError:
     SetCustomFonts=lambda x:None
 
@@ -133,7 +135,7 @@ class _rml_styles(object,):
             for style in node.findall('paraStyle'):
                 sname = style.get('name')
                 self.styles[sname] = self._para_style_update(style)
-                if self.default_style.has_key(sname):
+                if sname in self.default_style:
                     for key, value in self.styles[sname].items():                    
                         setattr(self.default_style[sname], key, value)
                 else:
@@ -1016,7 +1018,7 @@ class _rml_template(object):
                 self.doc_tmpl.build(fis,canvasmaker=NumberedCanvas)
             else:
                 self.doc_tmpl.build(fis)
-        except platypus.doctemplate.LayoutError, e:
+        except platypus.doctemplate.LayoutError as e:
             e.name = 'Print Error'
             e.value = 'The document you are trying to print contains a table row that does not fit on one page. Please try to split it in smaller rows or contact your administrator.'
             raise
@@ -1027,7 +1029,7 @@ def parseNode(rml, localcontext=None, fout=None, images=None, path='.', title=No
     #try to override some font mappings
     try:
         SetCustomFonts(r)
-    except Exception, exc:
+    except Exception as exc:
         _logger.info('Cannot set font mapping: %s', "".join(traceback.format_exception_only(type(exc),exc)))
     fp = StringIO()
     r.render(fp)
@@ -1054,15 +1056,15 @@ def parseString(rml, localcontext=None, fout=None, images=None, path='.', title=
         return fp.getvalue()
 
 def trml2pdf_help():
-    print 'Usage: trml2pdf input.rml >output.pdf'
-    print 'Render the standard input (RML) and output a PDF file'
+    print('Usage: trml2pdf input.rml >output.pdf')
+    print('Render the standard input (RML) and output a PDF file')
     sys.exit(0)
 
 if __name__=="__main__":
     if len(sys.argv)>1:
         if sys.argv[1]=='--help':
             trml2pdf_help()
-        print parseString(file(sys.argv[1], 'r').read()),
+        print(parseString(file(sys.argv[1], 'r').read()), end=' ')
     else:
-        print 'Usage: trml2pdf input.rml >output.pdf'
-        print 'Try \'trml2pdf --help\' for more information.'
+        print('Usage: trml2pdf input.rml >output.pdf')
+        print('Try \'trml2pdf --help\' for more information.')

@@ -330,7 +330,7 @@ def load_openerp_module(module_name):
         if info['post_load']:
             getattr(sys.modules['openerp.addons.' + module_name], info['post_load'])()
 
-    except Exception, e:
+    except Exception as e:
         msg = "Couldn't load module %s" % (module_name)
         _logger.critical(msg)
         _logger.critical(e)
@@ -384,7 +384,7 @@ def get_test_modules(module):
     modpath = 'openerp.addons.' + module
     try:
         mod = importlib.import_module('.tests', modpath)
-    except Exception, e:
+    except Exception as e:
         # If module has no `tests` sub-module, no problem.
         if str(e) != 'No module named tests':
             _logger.exception('Can not `import %s`.', module)

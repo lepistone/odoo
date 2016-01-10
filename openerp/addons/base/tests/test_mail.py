@@ -4,10 +4,11 @@
 # > PYTHONPATH=. python2 openerp/tests/test_misc.py
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from __future__ import absolute_import
 import unittest
 
 from openerp.tools import html_sanitize, html_email_clean, append_content_to_html, plaintext2html, email_split
-import test_mail_examples
+from . import test_mail_examples
 
 
 class TestSanitizer(unittest.TestCase):

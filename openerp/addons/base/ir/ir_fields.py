@@ -84,7 +84,7 @@ class ir_fields_converter(models.AbstractModel):
                             # uniform handling
                             w = ImportWarning(w)
                         log(field, w)
-                except ValueError, e:
+                except ValueError as e:
                     log(field, e)
             return converted
 

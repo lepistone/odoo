@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
-import inheritance
-import extension
-import delegation
+from __future__ import absolute_import
+# -*- coding: utf-8 -*-
+from . import inheritance
+from . import extension
+from . import delegation

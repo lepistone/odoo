@@ -1,6 +1,7 @@
 #openerp.loggers.handlers. -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from __future__ import absolute_import
 import ConfigParser
 import optparse
 import os
@@ -10,7 +11,7 @@ import openerp.conf
 import openerp.loglevels as loglevels
 import logging
 import openerp.release as release
-import appdirs
+from . import appdirs
 
 class MyOption (optparse.Option, object):
     """ optparse Option with two additional attributes.
@@ -485,7 +486,7 @@ class configmanager(object):
             for sec in p.sections():
                 if sec == 'options':
                     continue
-                if not self.misc.has_key(sec):
+                if sec not in self.misc:
                     self.misc[sec]= {}
                 for (name, value) in p.items(sec):
                     if value=='True' or value=='true':
@@ -527,7 +528,7 @@ class configmanager(object):
             try:
                 p.write(file(self.rcfile, 'w'))
                 if not rc_exists:
-                    os.chmod(self.rcfile, 0600)
+                    os.chmod(self.rcfile, 0o600)
             except IOError:
                 sys.stderr.write("ERROR: couldn't write the config file\n")
 
@@ -557,7 +558,7 @@ class configmanager(object):
     def addons_data_dir(self):
         d = os.path.join(self['data_dir'], 'addons', release.series)
         if not os.path.exists(d):
-            os.makedirs(d, 0700)
+            os.makedirs(d, 0o700)
         else:
             assert os.access(d, os.W_OK), \
                 "%s: directory is not writable" % d
@@ -567,7 +568,7 @@ class configmanager(object):
     def session_dir(self):
         d = os.path.join(self['data_dir'], 'sessions')
         if not os.path.exists(d):
-            os.makedirs(d, 0700)
+            os.makedirs(d, 0o700)
         else:
             assert os.access(d, os.W_OK), \
                 "%s: directory is not writable" % d

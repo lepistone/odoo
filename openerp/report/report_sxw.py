@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+from __future__ import absolute_import
 from lxml import etree
 import StringIO
 import cStringIO
@@ -8,12 +9,12 @@ from datetime import datetime
 import os
 import re
 import time
-from interface import report_rml
-import preprocess
+from .interface import report_rml
+from . import preprocess
 import logging
 import openerp.tools as tools
 import zipfile
-import common
+from . import common
 from openerp.exceptions import AccessError
 
 import openerp

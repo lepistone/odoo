@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from simple import simple
-from rml import rml, rml2html, rml2txt, odt2odt , html2html, makohtml2html
-from render import render
+from __future__ import absolute_import
+from .simple import simple
+from .rml import rml, rml2html, rml2txt, odt2odt , html2html, makohtml2html
+from .render import render
 
 
 try:

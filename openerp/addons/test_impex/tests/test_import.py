@@ -787,7 +787,7 @@ class test_o2m(ImporterCase):
             self.import_(['const', 'value/.id'], [
                 ['42', '%d,%d' % (id1, id2)]
             ])
-        except ValueError, e:
+        except ValueError as e:
             # should be Exception(Database ID doesn't exist: export.one2many.child : $id1,$id2)
             self.assertIs(type(e), ValueError)
             self.assertEqual(

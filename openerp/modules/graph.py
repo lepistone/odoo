@@ -25,6 +25,7 @@ from zipfile import PyZipFile, ZIP_DEFLATED
 from cStringIO import StringIO
 
 import logging
+from functools import reduce
 
 _logger = logging.getLogger(__name__)
 

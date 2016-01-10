@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from __future__ import absolute_import
 import logging
 import logging.handlers
 import os
 import platform
 import pprint
-import release
+from . import release
 import sys
 import threading
 
 import psycopg2
 
 import openerp
-import sql_db
-import tools
+from . import sql_db
+from . import tools
 
 _logger = logging.getLogger(__name__)
 
@@ -116,7 +117,7 @@ def init_logger():
 
     logging.addLevelName(25, "INFO")
 
-    from tools.translate import resetlocale
+    from .tools.translate import resetlocale
     resetlocale()
 
     # create a format for log messages and dates

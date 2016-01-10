@@ -7,6 +7,7 @@ The PostgreSQL connector is a connectivity layer between the OpenERP code and
 the database, *not* a database abstraction toolkit. Database abstraction is what
 the ORM does, in fact.
 """
+from __future__ import absolute_import
 
 from contextlib import contextmanager
 from functools import wraps
@@ -43,8 +44,8 @@ for name, typeoid in types_mapping.items():
 psycopg2.extensions.register_type(psycopg2.extensions.new_type((700, 701, 1700,), 'float', undecimalize))
 
 
-import tools
-from tools.func import frame_codeinfo
+from . import tools
+from .tools.func import frame_codeinfo
 from datetime import datetime as mdt
 from datetime import timedelta
 import threading
@@ -213,7 +214,7 @@ class Cursor(object):
         try:
             params = params or None
             res = self._obj.execute(query, params)
-        except psycopg2.ProgrammingError, pe:
+        except psycopg2.ProgrammingError as pe:
             if self._default_log_exceptions if log_exceptions is None else log_exceptions:
                 _logger.info("Programming error: %s, in query %s", pe, query)
             raise

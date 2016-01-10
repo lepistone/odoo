@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-from helpers import Session
-from helpers import Record
+from __future__ import absolute_import
+from .helpers import Session
+from .helpers import Record
 
 from openerp.workflow.instance import WorkflowInstance
 # import instance

@@ -1,1 +1,2 @@
-import test_ir_rules
+from __future__ import absolute_import
+from . import test_ir_rules

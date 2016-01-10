@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from __future__ import print_function
+from __future__ import absolute_import
 import logging
-from translate import _
+from .translate import _
 
 _logger = logging.getLogger(__name__)
 
@@ -94,7 +96,7 @@ def amount_to_text(nbr, lang='en', currency='euro'):
 #        _logger.warning(_("Number too large '%d', can not translate it"))
 #        return str(nbr)
     
-    if not _translate_funcs.has_key(lang):
+    if lang not in _translate_funcs:
         _logger.warning(_("no translation function found for lang: '%s'"), lang)
         #TODO: (default should be en) same as above
         lang = 'en'
@@ -106,8 +108,8 @@ if __name__=='__main__':
     lang = 'nl'
     if len(argv) < 2:
         for i in range(1,200):
-            print i, ">>", int_to_text(i, lang)
+            print(i, ">>", int_to_text(i, lang))
         for i in range(200,999999,139):
-            print i, ">>", int_to_text(i, lang)
+            print(i, ">>", int_to_text(i, lang))
     else:
-        print int_to_text(int(argv[1]), lang)
+        print(int_to_text(int(argv[1]), lang))

@@ -243,10 +243,10 @@ class TestNewFields(common.TransactionCase):
         self.assertFalse(record.date)
 
         # one may assign date and datetime objects
-        record.date = date(2012, 05, 01)
+        record.date = date(2012, 0o5, 0o1)
         self.assertEqual(record.date, '2012-05-01')
 
-        record.date = datetime(2012, 05, 01, 10, 45, 00)
+        record.date = datetime(2012, 0o5, 0o1, 10, 45, 00)
         self.assertEqual(record.date, '2012-05-01')
 
         # one may assign dates in the default format, and it must be checked

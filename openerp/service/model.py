@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 from functools import wraps
 import logging
 from psycopg2 import IntegrityError, OperationalError, errorcodes
@@ -12,7 +13,7 @@ from openerp.exceptions import UserError, ValidationError, QWebException
 from openerp.tools.translate import translate
 from openerp.tools.translate import _
 
-import security
+from . import security
 
 _logger = logging.getLogger(__name__)
 
@@ -133,7 +134,7 @@ def check(f):
                 tries += 1
                 _logger.info("%s, retry %d/%d in %.04f sec..." % (errorcodes.lookup(e.pgcode), tries, MAX_TRIES_ON_CONCURRENCY_FAILURE, wait_time))
                 time.sleep(wait_time)
-            except IntegrityError, inst:
+            except IntegrityError as inst:
                 registry = openerp.registry(dbname)
                 for key in registry._sql_error.keys():
                     if key in inst[0]:

@@ -9,11 +9,12 @@ treated as a 'Server error'.
 
 If you consider introducing new exceptions, check out the test_exceptions addon.
 """
+from __future__ import absolute_import
 
 import logging
 from inspect import currentframe
 from lxml import etree
-from tools.func import frame_codeinfo
+from .tools.func import frame_codeinfo
 
 _logger = logging.getLogger(__name__)
 

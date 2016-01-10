@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """ Tests for the configuration file/command-line arguments. """
+from __future__ import absolute_import
 
 # This test should be run from its directory.
 
@@ -9,7 +10,7 @@
 
 import os
 
-import config
+from . import config
 
 config_file_00 = os.path.join(os.path.dirname(__file__),'test-config-values-00.conf')
 

@@ -22,7 +22,7 @@ def location_name_search(self, cr, user, name='', args=None, operator='ilike',
                            limit=limit, context=context))
 
     locations = self.name_get(cr, user, ids, context)
-    return sorted(locations, key=lambda (id, name): ids.index(id))
+    return sorted(locations, key=lambda id_name: ids.index(id_name[0]))
 
 
 class Country(osv.osv):

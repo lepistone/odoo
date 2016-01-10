@@ -146,9 +146,9 @@ class ir_actions_report_xml(osv.osv):
                             opj('addons',r['report_xml']),
                             r['report_xsl'] and opj('addons',r['report_xsl']), register=False)
                 else:
-                    raise Exception, "Unhandled report type: %s" % r
+                    raise Exception("Unhandled report type: %s" % r)
             else:
-                raise Exception, "Required report does not exist: %s" % name
+                raise Exception("Required report does not exist: %s" % name)
 
         return new_report
 

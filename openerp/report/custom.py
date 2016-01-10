@@ -1,23 +1,25 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from __future__ import absolute_import
 import os
 import time
 
 import openerp
 import openerp.tools as tools
 from openerp.tools.safe_eval import safe_eval as eval
-import print_xml
-import render
-from interface import report_int
-import common
+from . import print_xml
+from . import render
+from .interface import report_int
+from . import common
 from openerp.osv.orm import BaseModel
 from pychart import *
-import misc
+from . import misc
 import cStringIO
 from lxml import etree
 from openerp.tools.translate import _
 from openerp.exceptions import UserError
+from functools import reduce
 
 class external_pdf(render.render):
     def __init__(self, pdf):

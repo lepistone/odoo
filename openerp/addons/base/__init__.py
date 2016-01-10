@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-import ir
-import workflow
-import module
-import res
-import report
-import tests
+from __future__ import absolute_import
+# -*- coding: utf-8 -*-
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
+
+from . import ir
+from . import workflow
+from . import module
+from . import res
+from . import report
+from . import tests
 
 def post_init(cr, registry):
     """Rewrite ICP's to force groups"""
