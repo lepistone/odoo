@@ -1,3 +1,4 @@
+from past.builtins import basestring
 import unittest
 
 import openerp
@@ -42,7 +43,7 @@ class test_res_config(common.TransactionCase):
         self.assertIsInstance(res, tuple)
         self.assertEqual(len(res), 2, "The result should contain 2 elements")
         self.assertIsInstance(res[0], basestring)
-        self.assertIsInstance(res[1], (int, long))
+        self.assertIsInstance(res[1], (int, int))
 
         # Check returned values
         self.assertEqual(res[0], self.expected_path)

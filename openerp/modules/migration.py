@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 """ Modules migration handling. """
+from builtins import object
 
 import imp
 import logging
@@ -101,7 +102,7 @@ class MigrationManager(object):
                 'maintenance': opj('base', 'maintenance', 'migrations', pkg.name),
             }
 
-            for x in mapping.keys():
+            for x in list(mapping.keys()):
                 if version in m[x]:
                     for f in m[x][version]:
                         if m[x][version][f] is not None:

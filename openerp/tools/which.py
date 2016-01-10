@@ -38,6 +38,7 @@
        or raise IOError(errno.ENOENT).
 
 """
+from builtins import next
 __docformat__ = 'restructuredtext en'
 __all__ = 'which which_files pathsep defpath defpathext F_OK R_OK W_OK X_OK'.split()
 

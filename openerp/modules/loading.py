@@ -295,7 +295,7 @@ def load_modules(db, force_demo=False, status=None, update_module=False):
                 _logger.info('updating modules list')
                 modobj.update_list(cr, SUPERUSER_ID)
 
-            _check_module_names(cr, itertools.chain(tools.config['init'].keys(), tools.config['update'].keys()))
+            _check_module_names(cr, itertools.chain(list(tools.config['init'].keys()), list(tools.config['update'].keys())))
 
             mods = [k for k in tools.config['init'] if tools.config['init'][k]]
             if mods:
@@ -384,7 +384,7 @@ def load_modules(db, force_demo=False, status=None, update_module=False):
                         py_module = sys.modules['openerp.addons.%s' % (pkg.name,)]
                         getattr(py_module, uninstall_hook)(cr, registry)
 
-                registry['ir.module.module'].module_uninstall(cr, SUPERUSER_ID, modules_to_remove.values())
+                registry['ir.module.module'].module_uninstall(cr, SUPERUSER_ID, list(modules_to_remove.values()))
                 # Recursive reload, should only happen once, because there should be no
                 # modules to remove next time
                 cr.commit()
@@ -396,7 +396,7 @@ def load_modules(db, force_demo=False, status=None, update_module=False):
         if update_module:
             Views = registry['ir.ui.view']
             custom_view_test = True
-            for model in registry.models.keys():
+            for model in list(registry.models.keys()):
                 if not Views._validate_custom_views(cr, SUPERUSER_ID, model):
                     custom_view_test = False
                     _logger.error('invalid custom view(s) for model %s', model)
@@ -408,7 +408,7 @@ def load_modules(db, force_demo=False, status=None, update_module=False):
             _logger.info('Modules loaded.')
 
         # STEP 8: call _register_hook on every model
-        for model in registry.models.values():
+        for model in list(registry.models.values()):
             model._register_hook(cr)
 
         # STEP 9: Run the post-install tests

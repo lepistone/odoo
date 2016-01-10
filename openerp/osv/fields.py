@@ -16,6 +16,12 @@
         * required
         * size
 """
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+from builtins import filter
+from builtins import str
+from builtins import object
 
 import base64
 import datetime as DT
@@ -23,7 +29,7 @@ import functools
 import logging
 import pytz
 import re
-import xmlrpclib
+import xmlrpc.client
 from operator import itemgetter
 from contextlib import contextmanager
 from psycopg2 import Binary
@@ -48,7 +54,7 @@ _logger = logging.getLogger(__name__)
 def _symbol_set(symb):
     if symb is None or symb == False:
         return None
-    elif isinstance(symb, unicode):
+    elif isinstance(symb, str):
         return symb.encode('utf-8')
     return str(symb)
 
@@ -131,7 +137,7 @@ class _column(object):
         args['_prefetch'] = args.get('_prefetch', True)
 
         self._args = EMPTY_DICT
-        for key, val in args.iteritems():
+        for key, val in args.items():
             setattr(self, key, val)
 
         # prefetch only if _classic_write, not deprecated and not manual
@@ -193,15 +199,15 @@ class _column(object):
             ('change_default', self.change_default),
             ('deprecated', self.deprecated),
         ]
-        truthy_items = filter(itemgetter(1), [
+        truthy_items = list(filter(itemgetter(1), [
             ('group_operator', self.group_operator),
             ('size', self.size),
             ('ondelete', self.ondelete),
             ('translate', self.translate),
             ('domain', self._domain),
             ('context', self._context),
-        ])
-        return dict(base_items + truthy_items + self._args.items())
+        ]))
+        return dict(base_items + truthy_items + list(self._args.items()))
 
     def restart(self):
         pass
@@ -359,10 +365,10 @@ class html(text):
         args['strip_style'] = self._strip_style
         return args
 
-import __builtin__
+import builtins
 
 def _symbol_set_float(self, x):
-    result = __builtin__.float(x or 0.0)
+    result = builtins.float(x or 0.0)
     digits = self.digits
     if digits:
         precision, scale = digits
@@ -401,7 +407,7 @@ class float(_column):
 
 class monetary(_column):
     _type = 'monetary'
-    _symbol_set = ('%s', lambda x: __builtin__.float(x or 0.0))
+    _symbol_set = ('%s', lambda x: builtins.float(x or 0.0))
     _symbol_get = lambda self,x: x or 0.0
 
     def to_field_args(self):
@@ -617,7 +623,7 @@ class binary(_column):
             # to read the actual content if it's needed at some point.
             context = context or {}
             if context.get('bin_size') or context.get('bin_size_%s' % name):
-                postprocess = lambda val: tools.human_size(long(val))
+                postprocess = lambda val: tools.human_size(int(val))
             else:
                 postprocess = lambda val: val
             for val in (values or []):
@@ -684,7 +690,7 @@ class selection(_column):
         # field_to_dict isn't given a field name, only a field object, we
         # need to get the name back in order to perform the translation lookup
         field_name = next(
-            name for name, column in model._columns.iteritems()
+            name for name, column in model._columns.items()
             if column == field)
 
         translation_filter = "%s,%s" % (model._name, field_name)
@@ -825,7 +831,7 @@ class one2many(_column):
                 if act[0] == 0:
                     act[2][self._fields_id] = id
                     id_new = obj.create(cr, user, act[2], context=context)
-                    result += obj._store_get_values(cr, user, [id_new], act[2].keys(), context)
+                    result += obj._store_get_values(cr, user, [id_new], list(act[2].keys()), context)
                 elif act[0] == 1:
                     obj.write(cr, user, [act[1]], act[2], context=context)
                 elif act[0] == 2:
@@ -862,7 +868,7 @@ class one2many(_column):
                     obj.write(cr, user, act[2], {self._fields_id:id}, context=context or {})
                     ids2 = act[2] or [0]
                     cr.execute('select id from '+_table+' where '+self._fields_id+'=%s and id <> ALL (%s)', (id,ids2))
-                    ids3 = map(lambda x:x[0], cr.fetchall())
+                    ids3 = [x[0] for x in cr.fetchall()]
                     obj.write(cr, user, ids3, {self._fields_id:False}, context=context or {})
         return result
 
@@ -1090,7 +1096,7 @@ class many2many(_column):
 
 def get_nice_size(value):
     size = 0
-    if isinstance(value, (int,long)):
+    if isinstance(value, (int,int)):
         size = value
     elif value: # this is supposed to be a string
         size = len(value)
@@ -1106,7 +1112,7 @@ def sanitize_binary_value(value):
     # binary fields should be 7-bit ASCII base64-encoded data,
     # but we do additional sanity checks to make sure the values
     # are not something else that won't pass via XML-RPC
-    if isinstance(value, (xmlrpclib.Binary, tuple, list, dict)):
+    if isinstance(value, (xmlrpc.client.Binary, tuple, list, dict)):
         # these builtin types are meant to pass untouched
         return value
 
@@ -1475,11 +1481,11 @@ class function(_column):
         if field_type == 'binary':
             if context.get('bin_size'):
                 # client requests only the size of binary fields
-                for rid, value in values.iteritems():
+                for rid, value in values.items():
                     if value:
                         new_values[rid] = get_nice_size(value)
             elif not context.get('bin_raw'):
-                for rid, value in values.iteritems():
+                for rid, value in values.items():
                     if value:
                         new_values[rid] = sanitize_binary_value(value)
 
@@ -1497,15 +1503,15 @@ class function(_column):
             result = self._fnct(obj, cr, uid, ids, name, self._arg, context)
         if multi:
             swap = {}
-            for rid, values in result.iteritems():
-                for f, v in values.iteritems():
+            for rid, values in result.items():
+                for f, v in values.items():
                     if f not in name:
                         continue
                     swap.setdefault(f, {})[rid] = v
 
-            for field, values in swap.iteritems():
+            for field, values in swap.items():
                 new_values = self._postprocess_batch(cr, uid, obj, field, values, context)
-                for rid, value in new_values.iteritems():
+                for rid, value in new_values.items():
                     result[rid][field] = value
 
         else:
@@ -1545,10 +1551,10 @@ class related(function):
         # assume self._arg = ('foo', 'bar', 'baz')
         # domain = [(name, op, val)]   =>   search [('foo.bar.baz', op, val)]
         field = '.'.join(self._arg)
-        return map(lambda x: (field, x[1], x[2]), domain)
+        return [(field, x[1], x[2]) for x in domain]
 
     def _related_write(self, obj, cr, uid, ids, field_name, values, args, context=None):
-        if isinstance(ids, (int, long)):
+        if isinstance(ids, (int, int)):
             ids = [ids]
         for instance in obj.browse(cr, uid, ids, context=context):
             # traverse all fields except the last one
@@ -1572,13 +1578,13 @@ class related(function):
             # res[id] is a recordset; convert it to (id, name) or False.
             # Perform name_get as root, as seeing the name of a related object depends on
             # access right of source document, not target, so user may not have access.
-            value_ids = list(set(value.id for value in res.itervalues() if value))
+            value_ids = list(set(value.id for value in res.values() if value))
             value_name = dict(obj.pool[self._obj].name_get(cr, SUPERUSER_ID, value_ids, context=context))
-            res = dict((id, bool(value) and (value.id, value_name[value.id])) for id, value in res.iteritems())
+            res = dict((id, bool(value) and (value.id, value_name[value.id])) for id, value in res.items())
 
         elif self._type in ('one2many', 'many2many'):
             # res[id] is a recordset; convert it to a list of ids
-            res = dict((id, value.ids) for id, value in res.iteritems())
+            res = dict((id, value.ids) for id, value in res.items())
 
         return res
 
@@ -1674,7 +1680,7 @@ class sparse(function):
                         # filter out deleted records as superuser
                         relation_obj = obj.pool[obj._columns[field_name].relation]
                         value = relation_obj.exists(cr, openerp.SUPERUSER_ID, value)
-                if type(value) in (int,long) and field_type == 'many2one':
+                if type(value) in (int,int) and field_type == 'many2one':
                     relation_obj = obj.pool[obj._columns[field_name].relation]
                     # check for deleted record as superuser
                     if not relation_obj.exists(cr, openerp.SUPERUSER_ID, [value]):
@@ -1765,16 +1771,16 @@ class property(function):
             values = ir_property.get_multi(cr, uid, prop_name, obj._name, ids, context=context)
             if field.type == 'many2one':
                 # name_get the non-null values as SUPERUSER_ID
-                vals = sum(set(filter(None, values.itervalues())),
+                vals = sum(set([_f for _f in iter(values.values()) if _f]),
                            obj.pool[field.comodel_name].browse(cr, uid, [], context=context))
                 vals_name = dict(vals.sudo().name_get()) if vals else {}
-                for id, value in values.iteritems():
+                for id, value in values.items():
                     ng = False
                     if value and value.id in vals_name:
                         ng = value.id, vals_name[value.id]
                     res[id][prop_name] = ng
             else:
-                for id, value in values.iteritems():
+                for id, value in values.items():
                     res[id][prop_name] = value
 
         return res

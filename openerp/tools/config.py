@@ -2,7 +2,12 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from __future__ import absolute_import
-import ConfigParser
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from past.builtins import basestring
+from builtins import object
+import configparser
 import optparse
 import os
 import sys
@@ -53,7 +58,7 @@ def _deduplicate_loggers(loggers):
     # there are no duplicates within the output sequence
     return (
         '{}:{}'.format(logger, level)
-        for logger, level in dict(it.split(':') for it in loggers).iteritems()
+        for logger, level in dict(it.split(':') for it in loggers).items()
     )
 
 
@@ -430,7 +435,7 @@ class configmanager(object):
         self.options['init'] = opt.init and dict.fromkeys(opt.init.split(','), 1) or {}
         self.options["demo"] = not opt.without_demo and self.options['init'] or {}
         self.options['update'] = opt.update and dict.fromkeys(opt.update.split(','), 1) or {}
-        self.options['translate_modules'] = opt.translate_modules and map(lambda m: m.strip(), opt.translate_modules.split(',')) or ['all']
+        self.options['translate_modules'] = opt.translate_modules and [m.strip() for m in opt.translate_modules.split(',')] or ['all']
         self.options['translate_modules'].sort()
 
         if opt.pg_path:
@@ -445,7 +450,7 @@ class configmanager(object):
 
         openerp.conf.addons_paths = self.options['addons_path'].split(',')
         if opt.server_wide_modules:
-            openerp.conf.server_wide_modules = map(lambda m: m.strip(), opt.server_wide_modules.split(','))
+            openerp.conf.server_wide_modules = [m.strip() for m in opt.server_wide_modules.split(',')]
         else:
             openerp.conf.server_wide_modules = ['web','web_kanban']
 
@@ -473,7 +478,7 @@ class configmanager(object):
         setattr(parser.values, option.dest, ",".join(ad_paths))
 
     def load(self):
-        p = ConfigParser.ConfigParser()
+        p = configparser.ConfigParser()
         try:
             p.read([self.rcfile])
             for (name,value) in p.items('options'):
@@ -496,12 +501,12 @@ class configmanager(object):
                     self.misc[sec][name] = value
         except IOError:
             pass
-        except ConfigParser.NoSectionError:
+        except configparser.NoSectionError:
             pass
 
     def save(self):
-        p = ConfigParser.ConfigParser()
-        loglevelnames = dict(zip(self._LOGLEVELS.values(), self._LOGLEVELS.keys()))
+        p = configparser.ConfigParser()
+        loglevelnames = dict(list(zip(list(self._LOGLEVELS.values()), list(self._LOGLEVELS.keys()))))
         p.add_section('options')
         for opt in sorted(self.options.keys()):
             if opt in ('version', 'language', 'translate_out', 'translate_in', 'overwrite_existing_translations', 'init', 'update'):

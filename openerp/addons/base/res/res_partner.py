@@ -1,3 +1,7 @@
+from future import standard_library
+standard_library.install_aliases()
+from past.builtins import basestring
+from builtins import object
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
@@ -5,7 +9,7 @@ import datetime
 from lxml import etree
 import math
 import pytz
-import urlparse
+import urllib.parse
 
 import openerp
 from openerp import tools, api
@@ -45,7 +49,7 @@ class format_address(object):
     @api.model
     def fields_view_get_address(self, arch):
         fmt = self.env.user.company_id.country_id.address_format or ''
-        for k, v in ADDRESS_FORMAT_LAYOUTS.items():
+        for k, v in list(ADDRESS_FORMAT_LAYOUTS.items()):
             if k in fmt:
                 doc = etree.fromstring(arch)
                 for node in doc.xpath("//div[@class='address_format']"):
@@ -357,7 +361,7 @@ class res_partner(osv.Model, format_address):
     def onchange_parent_id(self, cr, uid, ids, parent_id, context=None):
         def value_or_id(val):
             """ return val or val.id if val is a browse record """
-            return val if isinstance(val, (bool, int, long, float, basestring)) else val.id
+            return val if isinstance(val, (bool, int, int, float, basestring)) else val.id
         if not parent_id or not ids:
             return {'value': {}}
         if parent_id:
@@ -502,11 +506,11 @@ class res_partner(osv.Model, format_address):
                 parent.write({'is_company': True})
 
     def _clean_website(self, website):
-        (scheme, netloc, path, params, query, fragment) = urlparse.urlparse(website)
+        (scheme, netloc, path, params, query, fragment) = urllib.parse.urlparse(website)
         if not scheme:
             if not netloc:
                 netloc, path = path, ''
-            website = urlparse.urlunparse(('http', netloc, path, params, query, fragment))
+            website = urllib.parse.urlunparse(('http', netloc, path, params, query, fragment))
         return website
 
     @api.multi
@@ -580,7 +584,7 @@ class res_partner(osv.Model, format_address):
     def name_get(self, cr, uid, ids, context=None):
         if context is None:
             context = {}
-        if isinstance(ids, (int, long)):
+        if isinstance(ids, (int, int)):
             ids = [ids]
         res = []
         types_dict = dict(self.fields_get(cr, uid, context=context)['type']['selection'])
@@ -682,7 +686,7 @@ class res_partner(osv.Model, format_address):
                 query += ' limit %s'
                 where_clause_params.append(limit)
             cr.execute(query, where_clause_params)
-            ids = map(lambda x: x[0], cr.fetchall())
+            ids = [x[0] for x in cr.fetchall()]
 
             if ids:
                 return self.name_get(cr, uid, ids, context)
@@ -735,9 +739,9 @@ class res_partner(osv.Model, format_address):
             adr_pref.add('contact')
         result = {}
         visited = set()
-        if isinstance(ids, (int, long)):
+        if isinstance(ids, (int, int)):
             ids = [ids]
-        for partner in self.browse(cr, uid, filter(None, ids), context=context):
+        for partner in self.browse(cr, uid, [_f for _f in ids if _f], context=context):
             current_partner = partner
             while current_partner:
                 to_scan = [current_partner]

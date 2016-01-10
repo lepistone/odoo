@@ -1,9 +1,11 @@
+from future import standard_library
+standard_library.install_aliases()
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import base64
 import contextlib
-import cStringIO
+import io
 
 from openerp import tools
 from openerp.osv import fields,osv
@@ -41,9 +43,9 @@ class base_language_export(osv.osv_memory):
     def act_getfile(self, cr, uid, ids, context=None):
         this = self.browse(cr, uid, ids, context=context)[0]
         lang = this.lang if this.lang != NEW_LANG_KEY else False
-        mods = sorted(map(lambda m: m.name, this.modules)) or ['all']
+        mods = sorted([m.name for m in this.modules]) or ['all']
 
-        with contextlib.closing(cStringIO.StringIO()) as buf:
+        with contextlib.closing(io.StringIO()) as buf:
             tools.trans_export(lang, mods, buf, this.format, cr)
             out = base64.encodestring(buf.getvalue())
 

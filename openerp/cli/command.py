@@ -1,4 +1,7 @@
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import logging
 import sys
 import os
@@ -6,6 +9,7 @@ from os.path import join as joinpath, isdir
 
 import openerp
 from openerp.modules import get_modules, get_module_path
+from future.utils import with_metaclass
 
 commands = {}
 
@@ -17,9 +21,8 @@ class CommandType(type):
         if name != 'command':
             commands[name] = cls
 
-class Command(object):
+class Command(with_metaclass(CommandType, object)):
     """Subclass this class to define new openerp subcommands """
-    __metaclass__ = CommandType
 
     def run(self, args):
         pass
@@ -28,7 +31,7 @@ class Help(Command):
     """Display the list of available commands"""
     def run(self, args):
         print("Available commands:\n")
-        names = commands.keys()
+        names = list(commands.keys())
         padding = max([len(k) for k in names]) + 2
         for k in sorted(names):
             name = k.ljust(padding, ' ')

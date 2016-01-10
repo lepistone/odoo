@@ -127,7 +127,7 @@ def _check_report(report_id):
             res['code'] = 'zlib'
         else:
             #CHECKME: why is this needed???
-            if isinstance(result['result'], unicode):
+            if isinstance(result['result'], str):
                 res2 = result['result'].encode('latin1', 'replace')
             else:
                 res2 = result['result']

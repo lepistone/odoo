@@ -30,6 +30,7 @@
     Methods written in the "traditional" style are automatically decorated,
     following some heuristics based on parameter names.
 """
+from builtins import object
 
 __all__ = [
     'Environment',
@@ -82,7 +83,7 @@ class Meta(type):
         # dummy parent class to catch overridden methods decorated with 'returns'
         parent = type.__new__(meta, name, bases, {})
 
-        for key, value in attrs.items():
+        for key, value in list(attrs.items()):
             if not key.startswith('__') and callable(value):
                 # make the method inherit from decorators
                 value = propagate(getattr(parent, key, None), value)
@@ -886,7 +887,7 @@ class Environment(object):
     def remove_todo(self, field, records):
         """ Mark ``field`` as recomputed on ``records``. """
         recs_list = [recs - records for recs in self.all.todo.pop(field, [])]
-        recs_list = filter(None, recs_list)
+        recs_list = [_f for _f in recs_list if _f]
         if recs_list:
             self.all.todo[field] = recs_list
 
@@ -906,14 +907,14 @@ class Environment(object):
         # make a full copy of the cache, and invalidate it
         cache_dump = dict(
             (field, dict(field_cache))
-            for field, field_cache in self.cache.iteritems()
+            for field, field_cache in self.cache.items()
         )
         self.invalidate_all()
 
         # re-fetch the records, and compare with their former cache
         invalids = []
-        for field, field_dump in cache_dump.iteritems():
-            ids = filter(None, field_dump)
+        for field, field_dump in cache_dump.items():
+            ids = [_f for _f in field_dump if _f]
             records = self[field.model_name].browse(ids)
             for record in records:
                 try:

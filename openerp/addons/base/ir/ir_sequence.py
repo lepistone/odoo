@@ -204,7 +204,7 @@ class ir_sequence(models.Model):
                 'weekday': '%w', 'h24': '%H', 'h12': '%I', 'min': '%M', 'sec': '%S'
             }
             res = {}
-            for key, sequence in sequences.iteritems():
+            for key, sequence in sequences.items():
                 res[key] = now.strftime(sequence)
                 res['range_' + key] = t.strftime(sequence)
 

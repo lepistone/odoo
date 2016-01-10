@@ -1,3 +1,5 @@
+from builtins import zip
+from builtins import str
 # -*- coding: utf-8 -*-
 import itertools
 import openerp.modules.registry
@@ -64,7 +66,7 @@ class test_integer_field(CreatorCase):
     def test_huge(self):
         self.assertEqual(
             self.export(2**31-1),
-            [[unicode(2**31-1)]])
+            [[str(2**31-1)]])
 
 class test_float_field(CreatorCase):
     model_name = 'export.float'
@@ -304,7 +306,7 @@ class test_m2o(CreatorCase):
             self.cr, openerp.SUPERUSER_ID, {'value': 42})
         self.assertEqual(
             self.export(integer_id, fields=['value/.id', 'value/value']),
-            [[unicode(integer_id), u'42']])
+            [[str(integer_id), u'42']])
     def test_external_id(self):
         integer_id = self.registry('export.integer').create(
             self.cr, openerp.SUPERUSER_ID, {'value': 42})

@@ -2,6 +2,13 @@
 #----------------------------------------------------------
 # OpenERP HTTP layer
 #----------------------------------------------------------
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from past.builtins import basestring
+from builtins import object
+from past.utils import old_div
 import ast
 import collections
 import contextlib
@@ -20,7 +27,7 @@ import sys
 import threading
 import time
 import traceback
-import urlparse
+import urllib.parse
 import warnings
 from zlib import adler32
 
@@ -36,6 +43,7 @@ import werkzeug.routing
 import werkzeug.wrappers
 import werkzeug.wsgi
 from werkzeug.wsgi import wrap_file
+from future.utils import with_metaclass
 
 try:
     import psutil
@@ -118,7 +126,7 @@ def dispatch_rpc(service_name, method, params):
             end_rss, end_vms = 0, 0
             if psutil:
                 end_rss, end_vms = memory_info(psutil.Process(os.getpid()))
-            logline = '%s.%s time:%.3fs mem: %sk -> %sk (diff: %sk)' % (service_name, method, end_time - start_time, start_vms / 1024, end_vms / 1024, (end_vms - start_vms)/1024)
+            logline = '%s.%s time:%.3fs mem: %sk -> %sk (diff: %sk)' % (service_name, method, end_time - start_time, old_div(start_vms, 1024), old_div(end_vms, 1024), old_div((end_vms - start_vms),1024))
             if rpc_response_flag:
                 openerp.netsvc.log(rpc_response, logging.DEBUG, logline, result)
             else:
@@ -264,7 +272,7 @@ class WebRequest(object):
 
     def set_handler(self, endpoint, arguments, auth):
         # is this needed ?
-        arguments = dict((k, v) for k, v in arguments.iteritems()
+        arguments = dict((k, v) for k, v in arguments.items()
                          if not k.startswith("_ignored_"))
 
         self.endpoint_arguments = arguments
@@ -327,7 +335,7 @@ class WebRequest(object):
             debug = self.httprequest.environ.get('HTTP_X_DEBUG_MODE')
 
         if not debug and self.httprequest.referrer:
-            debug = bool(urlparse.parse_qs(urlparse.urlparse(self.httprequest.referrer).query, keep_blank_values=True).get('debug'))
+            debug = bool(urllib.parse.parse_qs(urllib.parse.urlparse(self.httprequest.referrer).query, keep_blank_values=True).get('debug'))
         return debug
 
     @contextlib.contextmanager
@@ -685,7 +693,7 @@ class JsonRequest(WebRequest):
                 if psutil:
                     _, end_vms = memory_info(psutil.Process(os.getpid()))
                 logline = '%s: %s %s: time:%.3fs mem: %sk -> %sk (diff: %sk)' % (
-                    endpoint, model, method, end_time - start_time, start_vms / 1024, end_vms / 1024, (end_vms - start_vms)/1024)
+                    endpoint, model, method, end_time - start_time, old_div(start_vms, 1024), old_div(end_vms, 1024), old_div((end_vms - start_vms),1024))
                 if rpc_response_flag:
                     rpc_response.debug('%s, %s', logline, pprint.pformat(result))
                 else:
@@ -722,14 +730,14 @@ def serialize_exception(e):
     return tmp
 
 def to_jsonable(o):
-    if isinstance(o, str) or isinstance(o,unicode) or isinstance(o, int) or isinstance(o, long) \
+    if isinstance(o, str) or isinstance(o,str) or isinstance(o, int) or isinstance(o, int) \
         or isinstance(o, bool) or o is None or isinstance(o, float):
         return o
     if isinstance(o, list) or isinstance(o, tuple):
         return [to_jsonable(x) for x in o]
     if isinstance(o, dict):
         tmp = {}
-        for k, v in o.items():
+        for k, v in list(o.items()):
             tmp[u"%s" % k] = to_jsonable(v)
         return tmp
     return ustr(o)
@@ -858,7 +866,7 @@ more details.
         """
         response = Response(data, headers=headers)
         if cookies:
-            for k, v in cookies.iteritems():
+            for k, v in cookies.items():
                 response.set_cookie(k, v)
         return response
 
@@ -910,7 +918,7 @@ class ControllerType(type):
         super(ControllerType, cls).__init__(name, bases, attrs)
 
         # flag old-style methods with req as first argument
-        for k, v in attrs.items():
+        for k, v in list(attrs.items()):
             if inspect.isfunction(v) and hasattr(v, 'original_func'):
                 # Set routing type on original functions
                 routing_type = v.routing.get('type')
@@ -940,8 +948,8 @@ class ControllerType(type):
             return
         controllers_per_module[module].append(name_class)
 
-class Controller(object):
-    __metaclass__ = ControllerType
+class Controller(with_metaclass(ControllerType, object)):
+    pass
 
 class EndPoint(object):
     def __init__(self, method, routing):
@@ -973,7 +981,7 @@ def routing_map(modules, nodb_only, converters=None):
             result = [klass]
         return result
 
-    uniq = lambda it: collections.OrderedDict((id(x), x) for x in it).values()
+    uniq = lambda it: list(collections.OrderedDict((id(x), x) for x in it).values())
 
     for module in modules:
         if module not in controllers_per_module:
@@ -1133,7 +1141,7 @@ class OpenERPSession(werkzeug.contrib.sessions.Session):
         security.check(self.db, self.uid, self.password)
 
     def logout(self, keep_db=False):
-        for k in self.keys():
+        for k in list(self.keys()):
             if not (keep_db and k == 'db'):
                 del self[k]
         self._default_values()
@@ -1324,7 +1332,7 @@ class OpenERPSession(werkzeug.contrib.sessions.Session):
         # NOTE we do not store files in the session itself to avoid loading them in memory.
         #      By storing them in the session store, we ensure every worker (even ones on other
         #      servers) can access them. It also allow stale files to be deleted by `session_gc`.
-        for f in req.files.values():
+        for f in list(req.files.values()):
             storename = 'werkzeug_%s_%s.file' % (self.sid, uuid.uuid4().hex)
             path = os.path.join(root.session_store.path, storename)
             with open(path, 'w') as fp:
@@ -1342,7 +1350,7 @@ class OpenERPSession(werkzeug.contrib.sessions.Session):
         try:
             if data:
                 # regenerate files filenames with the current session store
-                for name, (storename, filename, content_type) in data['files'].iteritems():
+                for name, (storename, filename, content_type) in data['files'].items():
                     path = os.path.join(root.session_store.path, storename)
                     files.add(name, (path, filename, content_type))
                 yield werkzeug.datastructures.CombinedMultiDict([data['form'], files])
@@ -1350,7 +1358,7 @@ class OpenERPSession(werkzeug.contrib.sessions.Session):
                 yield None
         finally:
             # cleanup files
-            for f, _, _ in files.values():
+            for f, _, _ in list(files.values()):
                 try:
                     os.unlink(f)
                 except IOError:
@@ -1445,7 +1453,7 @@ class DisableCacheMiddleware(object):
     def __call__(self, environ, start_response):
         def start_wrapped(status, headers):
             referer = environ.get('HTTP_REFERER', '')
-            parsed = urlparse.urlparse(referer)
+            parsed = urllib.parse.urlparse(referer)
             debug = parsed.query.count('debug') >= 1
 
             new_headers = []
@@ -1739,7 +1747,7 @@ def send_file(filepath_or_fp, mimetype=None, as_attachment=False, filename=None,
 
     :param cache_timeout: the timeout in seconds for the headers.
     """
-    if isinstance(filepath_or_fp, (str, unicode)):
+    if isinstance(filepath_or_fp, (str, str)):
         if not filename:
             filename = os.path.basename(filepath_or_fp)
         file = open(filepath_or_fp, 'rb')
@@ -1789,7 +1797,7 @@ def send_file(filepath_or_fp, mimetype=None, as_attachment=False, filename=None,
             mtime,
             size,
             adler32(
-                filename.encode('utf-8') if isinstance(filename, unicode)
+                filename.encode('utf-8') if isinstance(filename, str)
                 else filename
             ) & 0xffffffff
         ))

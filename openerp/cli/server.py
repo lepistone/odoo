@@ -10,6 +10,7 @@ GNU Public Licence.
 
 (c) 2003-TODAY, Fabien Pinckaers - OpenERP SA
 """
+from builtins import str
 
 import atexit
 import csv

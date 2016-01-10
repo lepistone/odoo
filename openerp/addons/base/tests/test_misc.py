@@ -1,3 +1,5 @@
+from builtins import next
+from builtins import range
 import unittest
 
 from openerp.tools import misc
@@ -11,14 +13,14 @@ class test_countingstream(unittest.TestCase):
         self.assertEqual(s.index, 0)
 
     def test_single(self):
-        s = misc.CountingStream(xrange(1))
+        s = misc.CountingStream(range(1))
         self.assertEqual(s.index, -1)
         self.assertEqual(next(s, None), 0)
         self.assertIsNone(next(s, None))
         self.assertEqual(s.index, 1)
 
     def test_full(self):
-        s = misc.CountingStream(xrange(42))
+        s = misc.CountingStream(range(42))
         for _ in s:
             pass
         self.assertEqual(s.index, 42)

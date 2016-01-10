@@ -1,3 +1,5 @@
+from builtins import filter
+from builtins import str
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
@@ -63,7 +65,7 @@ class actions(osv.osv):
         todo_obj = self.pool.get('ir.actions.todo')
         if not ids:
             return True
-        if isinstance(ids, (int, long)):
+        if isinstance(ids, (int, int)):
             ids = [ids]
         todo_ids = todo_obj.search(cr, uid, [('action_id', 'in', ids)], context=context)
         todo_obj.unlink(cr, uid, todo_ids, context=context)
@@ -185,7 +187,7 @@ class ir_actions_report_xml(osv.osv):
         """
         new_report = self._lookup_report(cr, name)
 
-        if isinstance(new_report, (str, unicode)):  # Qweb report
+        if isinstance(new_report, (str, str)):  # Qweb report
             # The only case where a QWeb report is rendered with this method occurs when running
             # yml tests originally written for RML reports.
             if openerp.tools.config['test_enable'] and not tools.config['test_report_directory']:
@@ -364,7 +366,7 @@ class ir_actions_act_window(osv.osv):
     def read(self, cr, uid, ids, fields=None, context=None, load='_classic_read'):
         """ call the method get_empty_list_help of the model and set the window action help message
         """
-        ids_int = isinstance(ids, (int, long))
+        ids_int = isinstance(ids, (int, int))
         if ids_int:
             ids = [ids]
         results = super(ir_actions_act_window, self).read(cr, uid, ids, fields=fields, context=context, load=load)
@@ -1218,9 +1220,7 @@ Launch Manually Once: after having been launched manually, it sets automatically
 
         :rtype: dict
         """
-        user_groups = set(map(
-            lambda x: x.id,
-            self.pool['res.users'].browse(cr, uid, [uid], context=context)[0].groups_id))
+        user_groups = set([x.id for x in self.pool['res.users'].browse(cr, uid, [uid], context=context)[0].groups_id])
         def groups_match(todo):
             """ Checks if the todo's groups match those of the current user
             """
@@ -1228,17 +1228,17 @@ Launch Manually Once: after having been launched manually, it sets automatically
                    or bool(user_groups.intersection((
                         group.id for group in todo.groups_id)))
 
-        done = filter(
+        done = list(filter(
             groups_match,
             self.browse(cr, uid,
                 self.search(cr, uid, [('state', '!=', 'open')], context=context),
-                        context=context))
+                        context=context)))
 
-        total = filter(
+        total = list(filter(
             groups_match,
             self.browse(cr, uid,
                 self.search(cr, uid, [], context=context),
-                        context=context))
+                        context=context)))
 
         return {
             'done': len(done),

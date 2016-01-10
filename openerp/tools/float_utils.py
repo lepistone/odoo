@@ -2,6 +2,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from __future__ import print_function
+from __future__ import division
+from past.builtins import cmp
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import math
 
 def _float_check_precision(precision_digits=None, precision_rounding=None):
@@ -50,7 +55,7 @@ def float_round(value, precision_digits=None, precision_rounding=None, rounding_
     # direction.
     # Credit: discussion with OpenERP community members on bug 882036
 
-    normalized_value = value / rounding_factor # normalize
+    normalized_value = old_div(value, rounding_factor) # normalize
     epsilon_magnitude = math.log(abs(normalized_value), 2)
     epsilon = 2**(epsilon_magnitude-53)
     if rounding_method == 'HALF-UP':
@@ -170,10 +175,10 @@ if __name__ == "__main__":
     expecteds = ['.00', '.02', '.01', '.68', '.67', '.46', '.456', '.4556']
     precisions = [2, 2, 2, 2, 2, 2, 3, 4]
     for magnitude in range(7):
-        for i in xrange(len(fractions)):
+        for i in range(len(fractions)):
             frac, exp, prec = fractions[i], expecteds[i], precisions[i]
             for sign in [-1,1]:
-                for x in xrange(0,10000,97):
+                for x in range(0,10000,97):
                     n = x * 10**magnitude
                     f = sign * (n + frac)
                     f_exp = ('-' if f != 0 and sign == -1 else '') + str(n) + exp 

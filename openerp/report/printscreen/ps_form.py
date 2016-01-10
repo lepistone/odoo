@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from __future__ import division
+from builtins import map
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import openerp
 from openerp.report.interface import report_int
 import openerp.tools as tools
@@ -22,7 +27,7 @@ class report_printscreen_list(report_int):
                 attrsa = node.attrib
                 attrs = {}
                 if not attrsa is None:
-                    for key,val in attrsa.items():
+                    for key,val in list(attrsa.items()):
                         attrs[key] = val
                 result.append(attrs['name'])
             else:
@@ -44,7 +49,7 @@ class report_printscreen_list(report_int):
         result = model.fields_view_get(cr, uid, view_type='form', context=context)
 
         fields_order = self._parse_string(result['arch'])
-        rows = model.read(cr, uid, datas['ids'], result['fields'].keys() )
+        rows = model.read(cr, uid, datas['ids'], list(result['fields'].keys()) )
         self._create_table(uid, datas['ids'], result['fields'], fields_order, rows, context, model._description)
         return self.obj.get(), 'pdf'
 
@@ -75,11 +80,11 @@ class report_printscreen_list(report_int):
                 s = 60
                 strmax -= s
             else:
-                t += fields[f].get('size', 56) / 28 + 1
+                t += old_div(fields[f].get('size', 56), 28) + 1
             l.append(s)
         for pos in range(len(l)):
             if not l[pos]:
-                s = fields[fields_order[pos]].get('size', 56) / 28 + 1
+                s = old_div(fields[fields_order[pos]].get('size', 56), 28) + 1
                 l[pos] = strmax * s / t
         _append_node('tableSize', ','.join(map(str,l)) )
 

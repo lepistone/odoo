@@ -25,7 +25,7 @@ MODULE_UNINSTALL_FLAG = '_force_unlink'
 def _get_fields_type(self, cr, uid, context=None):
     # Avoid too many nested `if`s below, as RedHat's Python 2.6
     # break on it. See bug 939653.
-    return sorted([(k,k) for k,v in fields.__dict__.iteritems()
+    return sorted([(k,k) for k,v in fields.__dict__.items()
                       if type(v) == type and \
                          issubclass(v, fields._column) and \
                          v != fields._column and \
@@ -41,7 +41,7 @@ def _in_modules(self, cr, uid, ids, field_name, arg, context=None):
 
     result = {}
     xml_ids = osv.osv._get_xml_ids(self, cr, uid, ids)
-    for k,v in xml_ids.iteritems():
+    for k,v in xml_ids.items():
         result[k] = ', '.join(sorted(installed_modules & set(xml_id.split('.')[0] for xml_id in v)))
     return result
 
@@ -135,7 +135,7 @@ class ir_model(osv.osv):
     def unlink(self, cr, user, ids, context=None):
         # Prevent manual deletion of module tables
         if context is None: context = {}
-        if isinstance(ids, (int, long)):
+        if isinstance(ids, (int, int)):
             ids = [ids]
         if not context.get(MODULE_UNINSTALL_FLAG):
             for model in self.browse(cr, user, ids, context):
@@ -186,7 +186,7 @@ class ir_model(osv.osv):
         return res
 
     def instanciate(self, cr, user, model, transient, context=None):
-        if isinstance(model, unicode):
+        if isinstance(model, str):
             model = model.encode('utf-8')
 
         class CustomModel(models.Model):
@@ -414,7 +414,7 @@ class ir_model_fields(osv.osv):
     def unlink(self, cr, user, ids, context=None):
         # Prevent manual deletion of module columns
         if context is None: context = {}
-        if isinstance(ids, (int, long)):
+        if isinstance(ids, (int, int)):
             ids = [ids]
         if not context.get(MODULE_UNINSTALL_FLAG) and \
                 any(field.state != 'manual' for field in self.browse(cr, user, ids, context)):
@@ -712,7 +712,7 @@ class ir_model_access(osv.osv):
         else:
             model_name = model
 
-        if isinstance(group_ids, (int, long)):
+        if isinstance(group_ids, (int, int)):
             group_ids = [group_ids]
         for group_id in group_ids:
             cr.execute("SELECT perm_" + mode + " "
@@ -885,13 +885,13 @@ class ir_model_data(osv.osv):
             names[res.id] = res.complete_name
             #result[res.model][res.res_id] = res.id
 
-        for model, id_map in bymodel.iteritems():
+        for model, id_map in bymodel.items():
             try:
-                ng = dict(self.pool[model].name_get(cr, uid, id_map.keys(), context=context))
+                ng = dict(self.pool[model].name_get(cr, uid, list(id_map.keys()), context=context))
             except Exception:
                 pass
             else:
-                for r in id_map.itervalues():
+                for r in id_map.values():
                     names[r.id] = ng.get(r.res_id, r.complete_name)
 
         return [(i, names[i]) for i in ids]
@@ -1020,7 +1020,7 @@ class ir_model_data(osv.osv):
             if record:
                 id = record.id
                 self.loads[(module,xml_id)] = (model,id)
-                for table, inherit_field in self.pool[model]._inherits.iteritems():
+                for table, inherit_field in self.pool[model]._inherits.items():
                     parent_id = record[inherit_field].id
                     parent_xid = '%s_%s' % (xml_id, table.replace('.', '_'))
                     self.loads[(module, parent_xid)] = (table, parent_id)
@@ -1099,7 +1099,7 @@ class ir_model_data(osv.osv):
         else:
             if mode=='init' or (mode=='update' and xml_id):
                 inherit_xml_ids = []
-                for table, field_name in model_obj._inherits.items():
+                for table, field_name in list(model_obj._inherits.items()):
                     xml_ids = self.pool['ir.model.data'].search(cr, uid, [
                         ('module', '=', module),
                         ('name', '=', xml_id + '_' + table.replace('.', '_')),
@@ -1141,7 +1141,7 @@ class ir_model_data(osv.osv):
                         },context=context)
         if xml_id and res_id:
             self.loads[(module, xml_id)] = (model, res_id)
-            for table, inherit_field in model_obj._inherits.iteritems():
+            for table, inherit_field in model_obj._inherits.items():
                 inherit_id = model_obj.read(cr, uid, [res_id],
                         [inherit_field])[0][inherit_field]
                 self.loads[(module, xml_id + '_' + table.replace('.', '_'))] = (table, inherit_id)

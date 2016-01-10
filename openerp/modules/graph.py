@@ -2,6 +2,12 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 """ Modules dependency graph. """
+from past.builtins import cmp
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import map
+from builtins import object
 
 import os, sys, imp
 from os.path import join as opj
@@ -22,7 +28,7 @@ import openerp.release as release
 import re
 import base64
 from zipfile import PyZipFile, ZIP_DEFLATED
-from cStringIO import StringIO
+from io import StringIO
 
 import logging
 from functools import reduce
@@ -53,7 +59,7 @@ class Graph(dict):
             return
         # update the graph with values from the database (if exist)
         ## First, we set the default values for each package in graph
-        additional_data = dict((key, {'id': 0, 'state': 'uninstalled', 'dbdemo': False, 'installed_version': None}) for key in self.keys())
+        additional_data = dict((key, {'id': 0, 'state': 'uninstalled', 'dbdemo': False, 'installed_version': None}) for key in list(self.keys()))
         ## Then we get the values from the database
         cr.execute('SELECT name, id, state, demo AS dbdemo, latest_version AS installed_version'
                    '  FROM ir_module_module'
@@ -63,8 +69,8 @@ class Graph(dict):
         ## and we update the default values with values from the database
         additional_data.update((x['name'], x) for x in cr.dictfetchall())
 
-        for package in self.values():
-            for k, v in additional_data[package.name].items():
+        for package in list(self.values()):
+            for k, v in list(additional_data[package.name].items()):
                 setattr(package, k, v)
 
     def add_module(self, cr, module, force=None):
@@ -111,7 +117,7 @@ class Graph(dict):
         self.update_from_db(cr)
 
         for package in later:
-            unmet_deps = filter(lambda p: p not in self, dependencies[package])
+            unmet_deps = [p for p in dependencies[package] if p not in self]
             _logger.error('module %s: Unmet dependencies: %s', package, ', '.join(unmet_deps))
 
         result = len(self) - len_graph
@@ -124,7 +130,7 @@ class Graph(dict):
         level = 0
         done = set(self.keys())
         while done:
-            level_modules = sorted((name, module) for name, module in self.items() if module.depth==level)
+            level_modules = sorted((name, module) for name, module in list(self.items()) if module.depth==level)
             for name, module in level_modules:
                 done.remove(name)
                 yield module
@@ -184,7 +190,7 @@ class Node(object):
                 setattr(child, name, value + 1)
 
     def __iter__(self):
-        return itertools.chain(iter(self.children), *map(iter, self.children))
+        return itertools.chain(iter(self.children), *list(map(iter, self.children)))
 
     def __str__(self):
         return self._pprint()

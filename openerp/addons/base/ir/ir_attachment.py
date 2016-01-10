@@ -316,7 +316,7 @@ class ir_attachment(osv.osv):
         res_ids = {}
         require_employee = False
         if ids:
-            if isinstance(ids, (int, long)):
+            if isinstance(ids, (int, int)):
                 ids = [ids]
             cr.execute('SELECT res_model, res_id, create_uid, public FROM ir_attachment WHERE id = ANY (%s)', (ids,))
             for rmod, rid, create_uid, public in cr.fetchall():
@@ -332,7 +332,7 @@ class ir_attachment(osv.osv):
                 res_ids.setdefault(values['res_model'],set()).add(values['res_id'])
 
         ima = self.pool.get('ir.model.access')
-        for model, mids in res_ids.items():
+        for model, mids in list(res_ids.items()):
             # ignore attachments that are not attached to a resource anymore when checking access rights
             # (resource was deleted but attachment was not)
             if not self.pool.get(model):
@@ -392,17 +392,17 @@ class ir_attachment(osv.osv):
         # To avoid multiple queries for each attachment found, checks are
         # performed in batch as much as possible.
         ima = self.pool.get('ir.model.access')
-        for model, targets in model_attachments.iteritems():
+        for model, targets in model_attachments.items():
             if model not in self.pool:
                 continue
             if not ima.check(cr, uid, model, 'read', False):
                 # remove all corresponding attachment ids
-                for attach_id in itertools.chain(*targets.values()):
+                for attach_id in itertools.chain(*list(targets.values())):
                     ids.remove(attach_id)
                 continue # skip ir.rule processing, these ones are out already
 
             # filter ids according to what access rules permit
-            target_ids = targets.keys()
+            target_ids = list(targets.keys())
             allowed_ids = [0] + self.pool[model].search(cr, uid, [('id', 'in', target_ids)], context=context)
             disallowed_ids = set(target_ids).difference(allowed_ids)
             for res_id in disallowed_ids:
@@ -414,13 +414,13 @@ class ir_attachment(osv.osv):
         return len(result) if count else list(result)
 
     def read(self, cr, uid, ids, fields_to_read=None, context=None, load='_classic_read'):
-        if isinstance(ids, (int, long)):
+        if isinstance(ids, (int, int)):
             ids = [ids]
         self.check(cr, uid, ids, 'read', context=context)
         return super(ir_attachment, self).read(cr, uid, ids, fields_to_read, context=context, load=load)
 
     def write(self, cr, uid, ids, vals, context=None):
-        if isinstance(ids, (int, long)):
+        if isinstance(ids, (int, int)):
             ids = [ids]
         self.check(cr, uid, ids, 'write', context=context, values=vals)
         # remove computed field depending of datas
@@ -433,7 +433,7 @@ class ir_attachment(osv.osv):
         return super(ir_attachment, self).copy(cr, uid, id, default, context)
 
     def unlink(self, cr, uid, ids, context=None):
-        if isinstance(ids, (int, long)):
+        if isinstance(ids, (int, int)):
             ids = [ids]
         self.check(cr, uid, ids, 'unlink', context=context)
 

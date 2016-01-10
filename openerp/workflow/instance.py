@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 from __future__ import absolute_import
+from past.builtins import basestring
+from builtins import object
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 from . import workitem
@@ -25,7 +27,7 @@ class WorkflowInstance(object):
     def create(cls, session, record, workflow_id):
         assert isinstance(session, Session)
         assert isinstance(record, Record)
-        assert isinstance(workflow_id, (int, long))
+        assert isinstance(workflow_id, (int, int))
 
         cr = session.cr
         cr.execute('insert into wkf_instance (res_type,res_id,uid,wkf_id,state) values (%s,%s,%s,%s,%s) RETURNING id', (record.model, record.id, session.uid, workflow_id, 'active'))

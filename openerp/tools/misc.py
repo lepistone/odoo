@@ -6,6 +6,15 @@
 Miscellaneous tools used by OpenERP.
 """
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+from builtins import str
+from builtins import zip
+from builtins import map
+from builtins import range
+from past.builtins import basestring
+from builtins import object
 
 from functools import wraps
 import cProfile
@@ -21,7 +30,7 @@ import time
 import werkzeug.utils
 import zipfile
 from collections import defaultdict, Hashable, Iterable, Mapping, OrderedDict
-from itertools import islice, izip, groupby
+from itertools import islice, groupby
 from lxml import etree
 from .which import which
 from threading import local
@@ -219,7 +228,7 @@ def _fileopen(path, mode, basedir, pathinfo, basename=None):
             zipname = tail
         zpath = os.path.join(basedir, head + '.zip')
         if zipfile.is_zipfile(zpath):
-            from cStringIO import StringIO
+            from io import StringIO
             zfile = zipfile.ZipFile(zpath)
             try:
                 fo = StringIO()
@@ -267,7 +276,7 @@ def flatten(list):
     r = []
     for e in list:
         if isiterable(e):
-            map(r.append, flatten(e))
+            list(map(r.append, flatten(e)))
         else:
             r.append(e)
     return r
@@ -289,7 +298,7 @@ def reverse_enumerate(l):
       File "<stdin>", line 1, in <module>
     StopIteration
     """
-    return izip(xrange(len(l)-1, -1, -1), reversed(l))
+    return zip(range(len(l)-1, -1, -1), reversed(l))
 
 def topological_sort(elems):
     """ Return a list of elements sorted so that their dependencies are listed
@@ -314,10 +323,10 @@ def topological_sort(elems):
             visited.add(n)
             if n in elems:
                 # first visit all dependencies of n, then append n to result
-                map(visit, elems[n])
+                list(map(visit, elems[n]))
                 result.append(n)
 
-    map(visit, elems)
+    list(map(visit, elems))
 
     return result
 
@@ -335,7 +344,7 @@ class UpdateableStr(local):
     def __repr__(self):
         return str(self.string)
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.string)
 
 
@@ -358,7 +367,7 @@ class UpdateableDict(local):
         return self.dict.clear()
 
     def keys(self):
-        return self.dict.keys()
+        return list(self.dict.keys())
 
     def __setitem__(self, i, y):
         self.dict.__setitem__(i, y)
@@ -370,13 +379,13 @@ class UpdateableDict(local):
         return self.dict.copy()
 
     def iteritems(self):
-        return self.dict.iteritems()
+        return iter(self.dict.items())
 
     def iterkeys(self):
-        return self.dict.iterkeys()
+        return iter(self.dict.keys())
 
     def itervalues(self):
-        return self.dict.itervalues()
+        return iter(self.dict.values())
 
     def pop(self, k, d=None):
         return self.dict.pop(k, d)
@@ -391,7 +400,7 @@ class UpdateableDict(local):
         return self.dict.update(E, F)
 
     def values(self):
-        return self.dict.values()
+        return list(self.dict.values())
 
     def get(self, k, d=None):
         return self.dict.get(k, d)
@@ -400,7 +409,7 @@ class UpdateableDict(local):
         return k in self.dict
 
     def items(self):
-        return self.dict.items()
+        return list(self.dict.items())
 
     def __cmp__(self, y):
         return self.dict.__cmp__(y)
@@ -532,7 +541,7 @@ def scan_languages():
     :returns: a list of (lang_code, lang_name) pairs
     :rtype: [(str, unicode)]
     """
-    return sorted(ALL_LANGUAGES.iteritems(), key=lambda k: k[1])
+    return sorted(iter(ALL_LANGUAGES.items()), key=lambda k: k[1])
 
 def get_user_companies(cr, user):
     def _get_company_children(cr, ids):
@@ -587,7 +596,7 @@ def logged(f):
         vector = ['Call -> function: %r' % f]
         for i, arg in enumerate(args):
             vector.append('  arg %02d: %s' % (i, pformat(arg)))
-        for key, value in kwargs.items():
+        for key, value in list(kwargs.items()):
             vector.append('  kwarg %10s: %s' % (key, pformat(value)))
 
         timeb4 = time.time()
@@ -652,7 +661,7 @@ def detect_ip_addr():
 
             # try 32 bit kernel:
             if ip_addr is None:
-                ifaces = filter(None, [namestr[i:i+32].split('\0', 1)[0] for i in range(0, outbytes, 32)])
+                ifaces = [_f for _f in [namestr[i:i+32].split('\0', 1)[0] for i in range(0, outbytes, 32)] if _f]
 
                 for ifname in [iface for iface in ifaces if iface != 'lo']:
                     ip_addr = socket.inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915, pack('256s', ifname[:15]))[20:24])
@@ -809,9 +818,9 @@ class upload_data_thread(threading.Thread):
         super(upload_data_thread,self).__init__()
     def run(self):
         try:
-            import urllib
-            args = urllib.urlencode(self.args)
-            fp = urllib.urlopen('http://www.openerp.com/scripts/survey.php', args)
+            import urllib.request, urllib.parse, urllib.error
+            args = urllib.parse.urlencode(self.args)
+            fp = urllib.request.urlopen('http://www.openerp.com/scripts/survey.php', args)
             fp.read()
             fp.close()
         except Exception:
@@ -961,7 +970,7 @@ class CountingStream(object):
         self.stopped = False
     def __iter__(self):
         return self
-    def next(self):
+    def __next__(self):
         if self.stopped: raise StopIteration()
         self.index += 1
         val = next(self.stream, _ph)
@@ -1031,7 +1040,7 @@ def dumpstacks(sig=None, frame=None):
     # modified for python 2.5 compatibility
     threads_info = dict([(th.ident, {'name': th.name, 'uid': getattr(th, 'uid', 'n/a')})
                         for th in threading.enumerate()])
-    for threadId, stack in sys._current_frames().items():
+    for threadId, stack in list(sys._current_frames().items()):
         thread_info = threads_info.get(threadId)
         code.append("\n# Thread: %s (id:%s) (uid:%s)" %
                     (thread_info and thread_info['name'] or 'n/a',
@@ -1060,7 +1069,7 @@ def freehash(arg):
         if isinstance(arg, Mapping):
             return hash(frozendict(arg))
         elif isinstance(arg, Iterable):
-            return hash(frozenset(map(freehash, arg)))
+            return hash(frozenset(list(map(freehash, arg))))
         else:
             return id(arg)
 
@@ -1081,7 +1090,7 @@ class frozendict(dict):
     def update(self, *args, **kwargs):
         raise NotImplementedError("'update' not supported on frozendict")
     def __hash__(self):
-        return hash(frozenset((key, freehash(val)) for key, val in self.iteritems()))
+        return hash(frozenset((key, freehash(val)) for key, val in self.items()))
 
 class Collector(Mapping):
     """ A mapping from keys to lists. This is essentially a space optimization
@@ -1146,7 +1155,7 @@ def formatLang(env, value, digits=None, grouping=True, monetary=False, dp=False,
                 if not digits and digits is not 0:
                     digits = DEFAULT_DIGITS
 
-    if isinstance(value, (str, unicode)) and not value:
+    if isinstance(value, (str, str)) and not value:
         return ''
 
     lang = env.user.company_id.partner_id.lang or 'en_US'

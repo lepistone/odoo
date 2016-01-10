@@ -1,3 +1,10 @@
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 #-----------------------------------------------------------
 # Threaded, Gevent and Prefork Servers
 #-----------------------------------------------------------
@@ -214,7 +221,7 @@ class ThreadedServer(CommonServer):
             time.sleep(SLEEP_INTERVAL + number)     # Steve Reich timing style
             registries = openerp.modules.registry.RegistryManager.registries
             _logger.debug('cron%d polling for jobs', number)
-            for db_name, registry in registries.iteritems():
+            for db_name, registry in registries.items():
                 while registry.ready:
                     acquired = openerp.addons.base.ir.ir_cron.ir_cron._acquire_job(db_name)
                     if not acquired:
@@ -505,7 +512,7 @@ class PreforkServer(CommonServer):
 
     def process_timeout(self):
         now = time.time()
-        for (pid, worker) in self.workers.items():
+        for (pid, worker) in list(self.workers.items()):
             if worker.watchdog_timeout is not None and \
                     (now - worker.watchdog_time) >= worker.watchdog_timeout:
                 _logger.error("Worker (%s) timeout", pid)
@@ -523,8 +530,8 @@ class PreforkServer(CommonServer):
     def sleep(self):
         try:
             # map of fd -> worker
-            fds = dict([(w.watchdog_pipe[0], w) for k, w in self.workers.items()])
-            fd_in = fds.keys() + [self.pipe[0]]
+            fds = dict([(w.watchdog_pipe[0], w) for k, w in list(self.workers.items())])
+            fd_in = list(fds.keys()) + [self.pipe[0]]
             # check for ping or internal wakeups
             ready = select.select(fd_in, [], [], self.beat)
             # update worker watchdogs
@@ -572,7 +579,7 @@ class PreforkServer(CommonServer):
         if graceful:
             _logger.info("Stopping gracefully")
             limit = time.time() + self.timeout
-            for pid in self.workers.keys():
+            for pid in list(self.workers.keys()):
                 self.worker_kill(pid, signal.SIGINT)
             while self.workers and time.time() < limit:
                 try:
@@ -584,7 +591,7 @@ class PreforkServer(CommonServer):
                 time.sleep(0.1)
         else:
             _logger.info("Stopping forcefully")
-        for pid in self.workers.keys():
+        for pid in list(self.workers.keys()):
             self.worker_kill(pid, signal.SIGTERM)
         self.socket.close()
 
@@ -795,9 +802,9 @@ class WorkerCron(Worker):
             if rpc_request_flag:
                 run_time = time.time() - start_time
                 end_rss, end_vms = memory_info(psutil.Process(os.getpid()))
-                vms_diff = (end_vms - start_vms) / 1024
+                vms_diff = old_div((end_vms - start_vms), 1024)
                 logline = '%s time:%.3fs mem: %sk -> %sk (diff: %sk)' % \
-                    (db_name, run_time, start_vms / 1024, end_vms / 1024, vms_diff)
+                    (db_name, run_time, old_div(start_vms, 1024), old_div(end_vms, 1024), vms_diff)
                 _logger.debug("WorkerCron (%s) %s", self.pid, logline)
 
             self.request_count += 1
@@ -856,7 +863,7 @@ def load_test_file_yml(registry, test_file):
 def load_test_file_py(registry, test_file):
     # Locate python module based on its filename and run the tests
     test_path, _ = os.path.splitext(os.path.abspath(test_file))
-    for mod_name, mod_mod in sys.modules.items():
+    for mod_name, mod_mod in list(sys.modules.items()):
         if mod_mod:
             mod_path, _ = os.path.splitext(getattr(mod_mod, '__file__', ''))
             if test_path == mod_path:

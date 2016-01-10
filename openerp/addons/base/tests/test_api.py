@@ -1,3 +1,4 @@
+from builtins import map
 
 from openerp import models
 from openerp.tools import mute_logger
@@ -71,8 +72,8 @@ class TestAPI(common.TransactionCase):
         """ Test the search method with count=True. """
         count1 = self.registry('res.partner').search(self.cr, self.uid, [], count=True)
         count2 = self.env['res.partner'].search([], count=True)
-        self.assertIsInstance(count1, (int, long))
-        self.assertIsInstance(count2, (int, long))
+        self.assertIsInstance(count1, (int, int))
+        self.assertIsInstance(count2, (int, int))
         self.assertEqual(count1, count2)
 
     @mute_logger('openerp.models')
@@ -81,11 +82,11 @@ class TestAPI(common.TransactionCase):
         domain = [('name', 'ilike', 'j')]
         partners = self.env['res.partner'].search(domain)
         self.assertTrue(partners)
-        ids = map(int, partners)
+        ids = list(map(int, partners))
 
         # modify those partners, and check that partners has not changed
         self.registry('res.partner').write(self.cr, self.uid, ids, {'active': False})
-        self.assertEqual(ids, map(int, partners))
+        self.assertEqual(ids, list(map(int, partners)))
 
         # redo the search, and check that the result is now empty
         partners2 = self.env['res.partner'].search(domain)
@@ -100,7 +101,7 @@ class TestAPI(common.TransactionCase):
         self.assertIsRecordset(user.groups_id, 'res.groups')
 
         partners = self.env['res.partner'].search([])
-        for name, field in partners._fields.iteritems():
+        for name, field in partners._fields.items():
             if field.type == 'many2one':
                 for p in partners:
                     self.assertIsRecord(p[name], field.comodel_name)
@@ -140,7 +141,7 @@ class TestAPI(common.TransactionCase):
         """ Call old-style methods in the old-fashioned way. """
         partners = self.env['res.partner'].search([('name', 'ilike', 'j')])
         self.assertTrue(partners)
-        ids = map(int, partners)
+        ids = list(map(int, partners))
 
         # call method name_get on partners' model, and check its effect
         res = partners._model.name_get(self.cr, self.uid, ids)
@@ -176,7 +177,7 @@ class TestAPI(common.TransactionCase):
         """ Call new-style methods in the old-fashioned way. """
         partners = self.env['res.partner'].search([('name', 'ilike', 'j')])
         self.assertTrue(partners)
-        ids = map(int, partners)
+        ids = list(map(int, partners))
 
         # call method write on partners' model, and check its effect
         partners._model.write(self.cr, self.uid, ids, {'active': False})

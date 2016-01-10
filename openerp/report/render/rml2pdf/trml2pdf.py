@@ -4,6 +4,13 @@
 
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import sys
 import copy
 import reportlab
@@ -26,10 +33,10 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.lib.pagesizes import A4, letter
 
 try:
-    from cStringIO import StringIO
+    from io import StringIO
     _hush_pyflakes = [ StringIO ]
 except ImportError:
-    from StringIO import StringIO
+    from io import StringIO
 
 try:
     from .customfonts import SetCustomFonts
@@ -136,7 +143,7 @@ class _rml_styles(object,):
                 sname = style.get('name')
                 self.styles[sname] = self._para_style_update(style)
                 if sname in self.default_style:
-                    for key, value in self.styles[sname].items():                    
+                    for key, value in list(self.styles[sname].items()):                    
                         setattr(self.default_style[sname], key, value)
                 else:
                     self.styles_obj[sname] = reportlab.lib.styles.ParagraphStyle(sname, self.default_style["Normal"], **self.styles[sname])
@@ -466,8 +473,8 @@ class _rml_canvas(object):
             self.canvas.setDash(node.get('dash').split(','))
 
     def _image(self, node):
-        import urllib
-        import urlparse
+        import urllib.request, urllib.parse, urllib.error
+        import urllib.parse
         from reportlab.lib.utils import ImageReader
         nfile = node.get('file')
         if not nfile:
@@ -494,14 +501,14 @@ class _rml_canvas(object):
                 s = StringIO(self.images[nfile])
             else:
                 try:
-                    up = urlparse.urlparse(str(nfile))
+                    up = urllib.parse.urlparse(str(nfile))
                 except ValueError:
                     up = False
                 if up and up.scheme:
                     # RFC: do we really want to open external URLs?
                     # Are we safe from cross-site scripting or attacks?
                     _logger.debug("Retrieve image from %s", nfile)
-                    u = urllib.urlopen(str(nfile))
+                    u = urllib.request.urlopen(str(nfile))
                     s = StringIO(u.read())
                 else:
                     _logger.debug("Open image file %s ", nfile)
@@ -519,7 +526,7 @@ class _rml_canvas(object):
             elif ('height' in args) and (not 'width' in args):
                 args['width'] = sx * args['height'] / sy
             elif ('width' in args) and ('height' in args):
-                if (float(args['width'])/args['height'])>(float(sx)>sy):
+                if (old_div(float(args['width']),args['height']))>(float(sx)>sy):
                     args['width'] = sx * args['height'] / sy
                 else:
                     args['height'] = sy * args['width'] / sx
@@ -642,7 +649,7 @@ class _rml_flowable(object):
         rc1 = utils._process_text(self, node.text or '')
         for n in utils._child_get(node,self):
             txt_n = copy.deepcopy(n)
-            for key in txt_n.attrib.keys():
+            for key in list(txt_n.attrib.keys()):
                 if key in ('rml_except', 'rml_loop', 'rml_tag'):
                     del txt_n.attrib[key]
             if not n.tag == 'bullet':
@@ -969,7 +976,7 @@ class _rml_template(object):
         if self.localcontext.get('company'):
             pageSize = pagesize_map.get(self.localcontext.get('company').rml_paper_format, A4)
         if node.get('pageSize'):
-            ps = map(lambda x:x.strip(), node.get('pageSize').replace(')', '').replace('(', '').split(','))
+            ps = [x.strip() for x in node.get('pageSize').replace(')', '').replace('(', '').split(',')]
             pageSize = ( utils.unit_get(ps[0]),utils.unit_get(ps[1]) )
 
         self.doc_tmpl = TinyDocTemplate(out, pagesize=pageSize, **utils.attr_get(node, ['leftMargin','rightMargin','topMargin','bottomMargin'], {'allowSplitting':'int','showBoundary':'bool','rotation':'int','title':'str','author':'str'}))

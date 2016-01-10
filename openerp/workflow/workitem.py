@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+from builtins import str
+from builtins import object
 
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
@@ -61,7 +63,7 @@ class WorkflowItem(object):
         assert isinstance(session, Session)
         assert isinstance(record, Record)
         assert isinstance(activity, dict)
-        assert isinstance(instance_id, (long, int))
+        assert isinstance(instance_id, (int, int))
         assert isinstance(stack, list)
 
         cr = session.cr

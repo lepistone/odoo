@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # taken from http://code.activestate.com/recipes/252524-length-limited-o1-lru-cache-implementation/
 from __future__ import absolute_import
+from builtins import object
 import threading
 from .func import synchronized
 
@@ -63,7 +64,7 @@ class LRU(object):
                 return
             a = self.first
             a.next.prev = None
-            self.first = a.next
+            self.first = a.__next__
             a.next = None
             del self.d[a.me[0]]
             del a
@@ -72,10 +73,10 @@ class LRU(object):
     def __delitem__(self, obj):
         nobj = self.d[obj]
         if nobj.prev:
-            nobj.prev.next = nobj.next
+            nobj.prev.next = nobj.__next__
         else:
-            self.first = nobj.next
-        if nobj.next:
+            self.first = nobj.__next__
+        if nobj.__next__:
             nobj.next.prev = nobj.prev
         else:
             self.last = nobj.prev
@@ -85,7 +86,7 @@ class LRU(object):
     def __iter__(self):
         cur = self.first
         while cur is not None:
-            cur2 = cur.next
+            cur2 = cur.__next__
             yield cur.me[1]
             cur = cur2
 
@@ -97,7 +98,7 @@ class LRU(object):
     def iteritems(self):
         cur = self.first
         while cur is not None:
-            cur2 = cur.next
+            cur2 = cur.__next__
             yield cur.me
             cur = cur2
 
@@ -107,12 +108,12 @@ class LRU(object):
 
     @synchronized()
     def itervalues(self):
-        for i,j in self.iteritems():
+        for i,j in self.items():
             yield j
 
     @synchronized()
     def keys(self):
-        return self.d.keys()
+        return list(self.d.keys())
 
     @synchronized()
     def pop(self,key):

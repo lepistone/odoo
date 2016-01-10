@@ -1,3 +1,6 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 # -*- coding: utf-8 -*-
 #----------------------------------------------------------
 # ir_http modular http routing
@@ -10,7 +13,7 @@ import mimetypes
 import os
 import re
 import sys
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 import werkzeug
 import werkzeug.exceptions
@@ -189,7 +192,7 @@ class ir_http(osv.AbstractModel):
 
     def _postprocess_args(self, arguments, rule):
         """ post process arg to set uid on browse records """
-        for name, arg in arguments.items():
+        for name, arg in list(arguments.items()):
             if isinstance(arg, orm.browse_record) and arg._uid is UID_PLACEHOLDER:
                 arguments[name] = arg.sudo(request.uid)
                 try:
@@ -210,7 +213,7 @@ class ir_http(osv.AbstractModel):
 
     def content_disposition(self, filename):
         filename = openerp.tools.ustr(filename)
-        escaped = urllib2.quote(filename.encode('utf8'))
+        escaped = urllib.parse.quote(filename.encode('utf8'))
         browser = request.httprequest.user_agent.browser
         version = int((request.httprequest.user_agent.version or '0').split('.')[0])
         if browser == 'msie' and version < 9:

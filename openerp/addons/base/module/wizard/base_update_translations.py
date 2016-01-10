@@ -1,7 +1,9 @@
+from future import standard_library
+standard_library.install_aliases()
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-import cStringIO
+import io
 
 from openerp import tools
 from openerp.osv import osv, fields
@@ -26,7 +28,7 @@ class base_update_translations(osv.osv_memory):
     def act_update(self, cr, uid, ids, context=None):
         this = self.browse(cr, uid, ids)[0]
         lang_name = self._get_lang_name(cr, uid, this.lang)
-        buf = cStringIO.StringIO()
+        buf = io.StringIO()
         tools.trans_export(this.lang, ['all'], buf, 'csv', cr)
         tools.trans_load_data(cr, buf, 'csv', this.lang, lang_name=lang_name)
         buf.close()

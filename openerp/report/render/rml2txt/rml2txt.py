@@ -4,8 +4,15 @@
 
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import sys
-import StringIO
+import io
 from lxml import etree
 
 from . import utils
@@ -143,7 +150,7 @@ class _flowable(object):
         return node.toxml()
 
     def _tag_spacer(self, node):
-        length = 1+int(utils.unit_get(node.get('length')))/35
+        length = 1+old_div(int(utils.unit_get(node.get('length'))),35)
         return "\n"*length
 
     def _tag_table(self, node):
@@ -152,7 +159,7 @@ class _flowable(object):
         self.tb = None
         sizes = None
         if node.get('colWidths'):
-            sizes = map(lambda x: utils.unit_get(x), node.get('colWidths').split(','))
+            sizes = [utils.unit_get(x) for x in node.get('colWidths').split(',')]
         trs = []
         for n in utils._child_get(node,self):
             if n.tag == 'tr':
@@ -172,10 +179,10 @@ class _flowable(object):
             trt = textbox()
             off=0
             for i in range(len(tds)):
-                p = int(sizes[i]/Font_size)
+                p = int(old_div(sizes[i],Font_size))
                 trl = tds[i].renderlines(pad=p)
                 trt.haplines(trl,off)
-                off += sizes[i]/Font_size
+                off += old_div(sizes[i],Font_size)
             saved_tb.curline = trt
             saved_tb.fline()
         
@@ -332,7 +339,7 @@ class _rml_draw_style(object):
     def get(self,tag):
         if not tag in self.style:
             return ""
-        return ';'.join(['%s:%s' % (x[0],x[1]) for x in self.style[tag].items()])
+        return ';'.join(['%s:%s' % (x[0],x[1]) for x in list(self.style[tag].items())])
 
 class _rml_template(object):
     def __init__(self, localcontext, out, node, doc, images=None, path='.', title=None):
@@ -365,7 +372,7 @@ class _rml_template(object):
                             frames[(t.posy,t.posx,n.localName)] = t
                         else:
                             self.style.update(n)
-            keys = frames.keys()
+            keys = list(frames.keys())
             keys.sort()
             keys.reverse()
             self.page_template[id] = []
@@ -453,7 +460,7 @@ class _rml_doc(object):
 def parseNode(rml, localcontext=None,fout=None, images=None, path='.',title=None):
     node = etree.XML(rml)
     r = _rml_doc(node, localcontext, images, path, title=title)
-    fp = StringIO.StringIO()
+    fp = io.StringIO()
     r.render(fp)
     return fp.getvalue()
 
@@ -466,7 +473,7 @@ def parseString(rml, localcontext=None,fout=None, images=None, path='.',title=No
         fp.close()
         return fout
     else:
-        fp = StringIO.StringIO()
+        fp = io.StringIO()
         r.render(fp)
         return fp.getvalue()
 

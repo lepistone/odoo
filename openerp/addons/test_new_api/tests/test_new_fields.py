@@ -1,3 +1,4 @@
+from past.builtins import basestring
 #
 # test cases for new-style fields
 #

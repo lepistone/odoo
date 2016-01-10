@@ -90,9 +90,9 @@ class ir_ui_menu(osv.osv):
             result = self._filter_visible_menus(cr, uid, ids, context=context)
 
         if offset:
-            result = result[long(offset):]
+            result = result[int(offset):]
         if limit:
-            result = result[:long(limit)]
+            result = result[:int(limit)]
 
         if count:
             return len(result)
@@ -135,7 +135,7 @@ class ir_ui_menu(osv.osv):
         # cascade-delete submenus blindly. We also can't use ondelete=set null because
         # that is not supported when _parent_store is used (would silently corrupt it).
         # TODO: ideally we should move them under a generic "Orphans" menu somewhere?
-        if isinstance(ids, (int, long)):
+        if isinstance(ids, (int, int)):
             ids = [ids]
         local_context = dict(context or {})
         local_context['ir.ui.menu.full_list'] = True

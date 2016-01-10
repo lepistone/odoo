@@ -1,3 +1,4 @@
+from builtins import map
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import time
@@ -118,7 +119,7 @@ class ir_rule(osv.osv):
                     global_domains.append(dom)
             # combine global domains and group domains
             if group_domains:
-                group_domain = expression.OR(map(expression.OR, group_domains.values()))
+                group_domain = expression.OR(list(map(expression.OR, list(group_domains.values()))))
             else:
                 group_domain = []
             domain = expression.AND(global_domains + [group_domain])

@@ -1,3 +1,7 @@
+from builtins import str
+from builtins import map
+from builtins import filter
+from builtins import object
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
@@ -249,7 +253,7 @@ def load_information_from_description_file(module, mod_path=None):
                 'sequence': 100,
                 'summary': '',
             }
-            info.update(itertools.izip(
+            info.update(zip(
                 'depends data demo test init_xml update_xml demo_xml'.split(),
                 iter(list, None)))
 
@@ -352,7 +356,7 @@ def get_modules():
             manifest_name = opj(dir, name, MANIFEST)
             zipfile_name = opj(dir, name)
             return os.path.isfile(manifest_name)
-        return map(clean, filter(is_really_module, os.listdir(dir)))
+        return list(map(clean, list(filter(is_really_module, os.listdir(dir)))))
 
     plist = []
     initialize_sys_path()
@@ -449,7 +453,7 @@ def run_unit_tests(module_name, dbname, position=runs_at_install):
     r = True
     for m in mods:
         tests = unwrap_suite(unittest.TestLoader().loadTestsFromModule(m))
-        suite = unittest.TestSuite(itertools.ifilter(position, tests))
+        suite = unittest.TestSuite(filter(position, tests))
 
         if suite.countTestCases():
             t0 = time.time()
@@ -489,5 +493,5 @@ def unwrap_suite(test):
         return
 
     for item in itertools.chain.from_iterable(
-            itertools.imap(unwrap_suite, subtests)):
+            map(unwrap_suite, subtests)):
         yield item

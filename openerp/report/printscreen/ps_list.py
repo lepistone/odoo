@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from __future__ import division
+from past.builtins import cmp
+from builtins import map
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import openerp
 from openerp.report.interface import report_int
 import openerp.tools as tools
@@ -80,7 +86,7 @@ class report_printscreen_list(report_int):
                         if self.groupby_no_leaf:
                             continue
                         child_ids = model.search(cr, uid, inner_domain)
-                        res = model.read(cr, uid, child_ids, result['fields'].keys(), context)
+                        res = model.read(cr, uid, child_ids, list(result['fields'].keys()), context)
                         res.sort(lambda x,y: cmp(ids.index(x['id']), ids.index(y['id'])))
                         rows.extend(res)
             dom = [('id','in',ids)]
@@ -88,8 +94,8 @@ class report_printscreen_list(report_int):
                 dom = datas.get('_domain',[])
             get_groupby_data(self.groupby, dom)
         else:
-            rows = model.read(cr, uid, datas['ids'], result['fields'].keys(), context)
-            ids2 = map(itemgetter('id'), rows) # getting the ids from read result
+            rows = model.read(cr, uid, datas['ids'], list(result['fields'].keys()), context)
+            ids2 = list(map(itemgetter('id'), rows)) # getting the ids from read result
             if datas['ids'] != ids2: # sorted ids were not taken into consideration for print screen
                 rows_new = []
                 for id in datas['ids']:
@@ -139,12 +145,12 @@ class report_printscreen_list(report_int):
                 if fields[f]['type'] in ('float','integer'):
                     temp[ince] = 1
             else:
-                t += fields[f].get('size', 80) / 28 + 1
+                t += old_div(fields[f].get('size', 80), 28) + 1
 
             l.append(s)
         for pos in range(len(l)):
             if not l[pos]:
-                s = fields[fields_order[pos]].get('size', 80) / 28 + 1
+                s = old_div(fields[fields_order[pos]].get('size', 80), 28) + 1
                 l[pos] = strmax * s / t
 
         _append_node('tableSize', ','.join(map(str,l)) )

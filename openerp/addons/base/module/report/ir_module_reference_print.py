@@ -23,7 +23,7 @@ class IrModelReferenceReport(models.AbstractModel):
         module_fields_res_ids = [x.res_id for x in module_fields_ids]
         if module_fields_res_ids:
             module_fields_names = [x.name for x in model_fields.browse(module_fields_res_ids)]
-            res = model_obj.fields_get(allfields=module_fields_names).items()
+            res = list(model_obj.fields_get(allfields=module_fields_names).items())
             res.sort()
         return res
 

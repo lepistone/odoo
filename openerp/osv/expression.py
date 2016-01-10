@@ -113,6 +113,12 @@ Finally, to instruct OpenERP to really use the unaccent function, you have to
 start the server specifying the ``--unaccent`` flag.
 
 """
+from builtins import hex
+from builtins import str
+from builtins import map
+from builtins import range
+from past.builtins import basestring
+from builtins import object
 import collections
 
 import logging
@@ -700,7 +706,7 @@ class expression(object):
                 names = [value]
             elif value and isinstance(value, (tuple, list)) and all(isinstance(item, basestring) for item in value):
                 names = value
-            elif isinstance(value, (int, long)):
+            elif isinstance(value, (int, int)):
                 return [value]
             if names:
                 name_get_list = [name_get[0] for name in names for name_get in comodel.name_search(cr, uid, name, [], 'ilike', context=context, limit=limit)]
@@ -1206,7 +1212,7 @@ class expression(object):
                     else:
                         ss = model._columns[left]._symbol_set
                         instr = ','.join([ss[0]] * len(params))
-                        params = map(ss[1], params)
+                        params = list(map(ss[1], params))
                     query = '(%s."%s" %s (%s))' % (table_alias, left, operator, instr)
                 else:
                     # The case for (left, 'in', []) or (left, 'not in', []).
@@ -1271,7 +1277,7 @@ class expression(object):
             if need_wildcard:
                 if isinstance(right, str):
                     str_utf8 = right
-                elif isinstance(right, unicode):
+                elif isinstance(right, str):
                     str_utf8 = right.encode('utf-8')
                 else:
                     str_utf8 = str(right)

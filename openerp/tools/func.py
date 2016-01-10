@@ -1,3 +1,5 @@
+from builtins import range
+from builtins import object
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
@@ -32,7 +34,7 @@ class lazy_property(object):
         """ Reset all lazy properties on the instance `obj`. """
         cls = type(obj)
         obj_dict = vars(obj)
-        for name in obj_dict.keys():
+        for name in list(obj_dict.keys()):
             if isinstance(getattr(cls, name, None), lazy_property):
                 obj_dict.pop(name)
 

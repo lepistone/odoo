@@ -80,26 +80,26 @@ class test_search(common.TransactionCase):
         # Do: search on res.users, order on a field on res.partner to try inherits'd fields, then res.users
         user_ids = users_obj.search(cr, search_user, [], order='name asc, login desc')
         expected_ids = [search_user, a, c, b]
-        test_user_ids = filter(lambda x: x in expected_ids, user_ids)
+        test_user_ids = [x for x in user_ids if x in expected_ids]
         self.assertEqual(test_user_ids, expected_ids, 'search on res_users did not provide expected ids or expected order')
 
         # Do: order on many2one and inherits'd fields
         user_ids = users_obj.search(cr, search_user, [], order='state_id asc, country_id desc, name asc, login desc')
         expected_ids = [c, b, a, search_user]
-        test_user_ids = filter(lambda x: x in expected_ids, user_ids)
+        test_user_ids = [x for x in user_ids if x in expected_ids]
         self.assertEqual(test_user_ids, expected_ids, 'search on res_users did not provide expected ids or expected order')
 
         # Do: order on many2one and inherits'd fields
         user_ids = users_obj.search(cr, search_user, [], order='country_id desc, state_id desc, name asc, login desc')
         expected_ids = [search_user, b, c, a]
-        test_user_ids = filter(lambda x: x in expected_ids, user_ids)
+        test_user_ids = [x for x in user_ids if x in expected_ids]
         self.assertEqual(test_user_ids, expected_ids, 'search on res_users did not provide expected ids or expected order')
 
         # Do: order on many2one, but not by specifying in order parameter of search, but by overriding _order of res_users
         self.patch_order('res.users', 'country_id desc, name asc, login desc')
         user_ids = users_obj.search(cr, search_user, [])
         expected_ids = [search_user, c, b, a]
-        test_user_ids = filter(lambda x: x in expected_ids, user_ids)
+        test_user_ids = [x for x in user_ids if x in expected_ids]
         self.assertEqual(test_user_ids, expected_ids, 'search on res_users did not provide expected ids or expected order')
 
     def test_11_indirect_inherits_m2o_order(self):
@@ -113,7 +113,7 @@ class test_search(common.TransactionCase):
             user_ids[u] = Users.create(cr, uid, {'name': u, 'login': u})
             cron_ids[u] = Cron.create(cr, uid, {'name': u, 'user_id': user_ids[u]})
 
-        ids = Cron.search(cr, uid, [('id', 'in', cron_ids.values())], order='user_id')
+        ids = Cron.search(cr, uid, [('id', 'in', list(cron_ids.values()))], order='user_id')
         expected_ids = [cron_ids[l] for l in 'ABC']
         self.assertEqual(ids, expected_ids)
 
@@ -135,7 +135,7 @@ class test_search(common.TransactionCase):
         create('F', parent_id=ids['D'])
 
         expected_order = [ids[x] for x in 'ADEFBC']
-        domain = [('id', 'in', ids.values())]
+        domain = [('id', 'in', list(ids.values()))]
         search_result = Cats.search(cr, uid, domain)
         self.assertEqual(search_result, expected_order)
 

@@ -1,3 +1,4 @@
+from builtins import str
 # -*- encoding: utf-8 -*-
 from functools import partial
 import itertools
@@ -41,7 +42,7 @@ class ViewCase(common.TransactionCase):
         # equality (!?!?!?!)
         self.assertEqual(dict(n1.attrib), dict(n2.attrib), msg)
 
-        for c1, c2 in itertools.izip_longest(n1, n2):
+        for c1, c2 in itertools.zip_longest(n1, n2):
             self.assertEqual(c1, c2, msg)
 
 

@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+from builtins import str
+from builtins import map
+from past.builtins import basestring
+from builtins import object
 from collections import OrderedDict
 from datetime import datetime, timedelta
 import logging
@@ -27,7 +31,7 @@ from . import assertion_report
 _logger = logging.getLogger(__name__)
 
 def encode(s):
-    return s.encode('utf8') if isinstance(s, unicode) else s
+    return s.encode('utf8') if isinstance(s, str) else s
 
 class YamlImportException(Exception):
     pass
@@ -37,8 +41,8 @@ class YamlImportAbortion(Exception):
 
 def _is_yaml_mapping(node, tag_constructor):
     value = isinstance(node, dict) \
-        and len(node.keys()) == 1 \
-        and isinstance(node.keys()[0], tag_constructor)
+        and len(list(node.keys())) == 1 \
+        and isinstance(list(node.keys())[0], tag_constructor)
     return value
 
 def is_comment(node):
@@ -217,7 +221,7 @@ class YamlInterpreter(object):
 
     def process_assert(self, node):
         if isinstance(node, dict):
-            assertion, expressions = node.items()[0]
+            assertion, expressions = list(node.items())[0]
         else:
             assertion, expressions = node, []
 
@@ -290,7 +294,7 @@ class YamlInterpreter(object):
         return record_dict
 
     def process_record(self, node):
-        record, fields = node.items()[0]
+        record, fields = list(node.items())[0]
         model = self.get_model(record.model)
         view_id = record.view
         if view_id and (view_id is not True) and isinstance(view_id, basestring):
@@ -391,7 +395,7 @@ class YamlInterpreter(object):
         def process_vals(fg, vals):
             """ sanitize the given field values """
             result = {}
-            for field_name, field_value in vals.iteritems():
+            for field_name, field_value in vals.items():
                 if field_name not in fg:
                     continue
                 if fg[field_name]['type'] == 'many2one' and isinstance(field_value, (tuple, list)):
@@ -405,14 +409,14 @@ class YamlInterpreter(object):
                         elif isinstance(command, dict):
                             return process_vals(sub_fg, command)
                         return command
-                    field_value = map(process, field_value or [])
+                    field_value = list(map(process, field_value or []))
                 result[field_name] = field_value
             return result
 
         def post_process(fg, elems, vals):
             """ filter out readonly fields from vals """
             result = {}
-            for field_name, field_value in vals.iteritems():
+            for field_name, field_value in vals.items():
                 if is_readonly(elems[field_name]):
                     continue
                 if fg[field_name]['type'] in ('one2many', 'many2many'):
@@ -426,7 +430,7 @@ class YamlInterpreter(object):
                         elif isinstance(command, dict):
                             return (0, 0, post_process(sub_fg, sub_elems, command))
                         return command
-                    field_value = map(process, field_value or [])
+                    field_value = list(map(process, field_value or []))
                 result[field_name] = field_value
             return result
 
@@ -458,7 +462,7 @@ class YamlInterpreter(object):
                 record_dict.update(process_vals(fg, result.get('value', {})))
 
             # fill in fields, and execute onchange where necessary
-            for field_name, field_elem in elems.iteritems():
+            for field_name, field_elem in elems.items():
                 assert field_name in fg, "The field '%s' is defined in the form view but not on the object '%s'!" % (field_name, model._name)
                 if is_readonly(field_elem):
                     # skip readonly fields
@@ -488,7 +492,7 @@ class YamlInterpreter(object):
                 result = recs.onchange(dict(record_dict, **parent_values), field_name, onchange_spec)
                 record_dict.update(process_vals(fg, {
                     key: val
-                    for key, val in result.get('value', {}).iteritems()
+                    for key, val in result.get('value', {}).items()
                     if key not in fields        # do not shadow values explicitly set in yaml
                 }))
 
@@ -497,7 +501,7 @@ class YamlInterpreter(object):
         else:
             record_dict = {}
 
-        for field_name, expression in fields.iteritems():
+        for field_name, expression in fields.items():
             if record_dict.get(field_name):
                 continue
             field_value = self._eval_field(model, field_name, expression, parent=record_dict, default=False, context=context)
@@ -508,7 +512,7 @@ class YamlInterpreter(object):
         # should not be sent to create. This bug appears with not stored function fields in the new API.
         return {
             key: val
-            for key, val in record_dict.iteritems()
+            for key, val in record_dict.items()
             if (key in model._columns or key in model._inherit_fields)
         }
 
@@ -593,7 +597,7 @@ class YamlInterpreter(object):
         self.env = openerp.api.Environment(self.cr, self.uid, self.context)
 
     def process_python(self, node):
-        python, statements = node.items()[0]
+        python, statements = list(node.items())[0]
         assert python.model or python.id, "!python node must have attribute `model` or `id`"
         if python.id is None:
             record = self.pool[python.model]
@@ -627,7 +631,7 @@ class YamlInterpreter(object):
             self.assertion_report.record_success()
 
     def process_workflow(self, node):
-        workflow, values = node.items()[0]
+        workflow, values = list(node.items())[0]
         if self.isnoupdate(workflow) and self.mode != 'init':
             return
         if workflow.ref:
@@ -682,7 +686,7 @@ class YamlInterpreter(object):
         return args
 
     def process_function(self, node):
-        function, params = node.items()[0]
+        function, params = list(node.items())[0]
         if self.isnoupdate(function) and self.mode != 'init':
             return
         model = self.get_model(function.model)
@@ -817,9 +821,9 @@ class YamlInterpreter(object):
     def process_ir_set(self, node):
         if not self.mode == 'init':
             return False
-        _, fields = node.items()[0]
+        _, fields = list(node.items())[0]
         res = {}
-        for fieldname, expression in fields.items():
+        for fieldname, expression in list(fields.items()):
             if is_eval(expression):
                 value = eval(expression.expression, self.eval_context)
             else:
@@ -932,7 +936,7 @@ class YamlInterpreter(object):
         elif not is_preceded_by_comment:
             if isinstance(node, dict):
                 msg = "Creating %s\n with %s"
-                args = node.items()[0]
+                args = list(node.items())[0]
                 self._log(msg, *args)
             else:
                 self._log(node)

@@ -1,3 +1,5 @@
+from builtins import map
+from builtins import str
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
@@ -18,7 +20,7 @@ class lang(osv.osv):
     _name = "res.lang"
     _description = "Languages"
 
-    _disallowed_datetime_patterns = tools.DATETIME_FORMATS_MAP.keys()
+    _disallowed_datetime_patterns = list(tools.DATETIME_FORMATS_MAP.keys())
     _disallowed_datetime_patterns.remove('%y') # this one is in fact allowed, just not good practice
 
     def install_lang(self, cr, uid, **args):
@@ -81,7 +83,7 @@ class lang(osv.osv):
             # unsupported '%-' patterns, e.g. for cs_CZ
             format = format.replace('%-', '%')
 
-            for pattern, replacement in tools.DATETIME_FORMATS_MAP.iteritems():
+            for pattern, replacement in tools.DATETIME_FORMATS_MAP.items():
                 format = format.replace(pattern, replacement)
             return str(format)
 
@@ -166,7 +168,7 @@ class lang(osv.osv):
 
     @tools.ormcache('lang', 'monetary')
     def _lang_data_get(self, cr, uid, lang, monetary=False):
-        if type(lang) in (str, unicode):
+        if type(lang) in (str, str):
             lang = self._lang_get(cr, uid, lang)
         conv = localeconv()
         lang_obj = self.browse(cr, uid, lang)
@@ -176,7 +178,7 @@ class lang(osv.osv):
         return grouping, thousands_sep, decimal_point
 
     def write(self, cr, uid, ids, vals, context=None):
-        if isinstance(ids, (int, long)):
+        if isinstance(ids, (int, int)):
              ids = [ids]
 
         if 'code' in vals:

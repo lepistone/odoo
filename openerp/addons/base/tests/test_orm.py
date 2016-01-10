@@ -1,3 +1,4 @@
+from builtins import map
 from collections import defaultdict
 from openerp.tools import mute_logger
 from openerp.tests import common
@@ -138,7 +139,7 @@ class TestORM(common.TransactionCase):
         partners_by_month = defaultdict(set)
         partners_by_year = defaultdict(set)
 
-        for name, date in partners.items():
+        for name, date in list(partners.items()):
             p = self.partner.create(self.cr, UID, dict(name=name, date=date))
             all_partners.append(p)
             partners_by_day[date].add(p)
@@ -197,7 +198,7 @@ class TestInherits(common.TransactionCase):
         """ `default_get` cannot return a dictionary or a new id """
         defaults = self.user.default_get(self.cr, UID, ['partner_id'])
         if 'partner_id' in defaults:
-            self.assertIsInstance(defaults['partner_id'], (bool, int, long))
+            self.assertIsInstance(defaults['partner_id'], (bool, int, int))
 
     def test_create(self):
         """ creating a user should automatically create a new partner """
@@ -319,7 +320,7 @@ class TestO2MSerialization(common.TransactionCase):
         " returns the VALUES dict as-is "
         values = [{'foo': 'bar'}, {'foo': 'baz'}, {'foo': 'baq'}]
         results = self.partner.resolve_2many_commands(
-            self.cr, UID, 'child_ids', map(CREATE, values))
+            self.cr, UID, 'child_ids', list(map(CREATE, values)))
 
         self.assertEqual(results, values)
 
@@ -330,7 +331,7 @@ class TestO2MSerialization(common.TransactionCase):
             self.partner.create(self.cr, UID, {'name': 'bar'}),
             self.partner.create(self.cr, UID, {'name': 'baz'})
         ]
-        commands = map(LINK_TO, ids)
+        commands = list(map(LINK_TO, ids))
 
         results = self.partner.resolve_2many_commands(
             self.cr, UID, 'child_ids', commands, ['name'])
@@ -426,7 +427,7 @@ class TestO2MSerialization(common.TransactionCase):
             self.partner.create(self.cr, UID, {'name': 'bar'}),
             self.partner.create(self.cr, UID, {'name': 'baz'})
         ]
-        commands = map(lambda id: (4, id), ids)
+        commands = [(4, id) for id in ids]
 
         results = self.partner.resolve_2many_commands(
             self.cr, UID, 'child_ids', commands, ['name'])

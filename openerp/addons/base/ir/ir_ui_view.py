@@ -1,3 +1,8 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import filter
+from builtins import map
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import collections
@@ -13,7 +18,7 @@ from operator import itemgetter
 
 import json
 import werkzeug
-import HTMLParser
+import html.parser
 from lxml import etree
 
 import openerp
@@ -49,7 +54,7 @@ def keep_query(*keep_params, **additional_params):
     if not keep_params and not additional_params:
         keep_params = ('*',)
     params = additional_params.copy()
-    qs_keys = request.httprequest.args.keys()
+    qs_keys = list(request.httprequest.args.keys())
     for keep_param in keep_params:
         for param in fnmatch.filter(qs_keys, keep_param):
             if param not in additional_params and param in qs_keys:
@@ -136,7 +141,7 @@ class view(osv.osv):
         result = dict.fromkeys(ids, False)
         IMD = self.pool['ir.model.data']
         data_ids = IMD.search_read(cr, uid, [('res_id', 'in', ids), ('model', '=', 'ir.ui.view')], ['res_id'], context=context)
-        result.update(map(itemgetter('res_id', 'id'), data_ids))
+        result.update(list(map(itemgetter('res_id', 'id'), data_ids)))
         return result
 
     def _resolve_external_ids(self, cr, uid, view, arch_fs):
@@ -552,10 +557,10 @@ class view(osv.osv):
                             separator = child.get('separator', ',')
                             if separator == ' ':
                                 separator = None    # squash spaces
-                            to_add = filter(bool, map(str.strip, child.get('add', '').split(separator)))
-                            to_remove = map(str.strip, child.get('remove', '').split(separator))
-                            values = map(str.strip, node.get(attribute, '').split(separator))
-                            value = (separator or ' ').join(filter(lambda s: s not in to_remove, values) + to_add)
+                            to_add = list(filter(bool, list(map(str.strip, child.get('add', '').split(separator)))))
+                            to_remove = list(map(str.strip, child.get('remove', '').split(separator)))
+                            values = list(map(str.strip, node.get(attribute, '').split(separator)))
+                            value = (separator or ' ').join([s for s in values if s not in to_remove] + to_add)
                         if value:
                             node.set(attribute, value)
                         elif attribute in node.attrib:
@@ -691,7 +696,7 @@ class view(osv.osv):
                                   view_id, context)
 
         def encode(s):
-            if isinstance(s, unicode):
+            if isinstance(s, str):
                 return s.encode('utf8')
             return s
 
@@ -815,7 +820,7 @@ class view(osv.osv):
 
         collect(arch, self.pool[model_name])
 
-        for field, nodes in field_nodes.iteritems():
+        for field, nodes in field_nodes.items():
             # if field should trigger an onchange, add on_change="1" on the
             # nodes referring to field
             model = self.pool[field.model_name]
@@ -904,7 +909,7 @@ class view(osv.osv):
                             node.set(action, 'false')
 
         arch = etree.tostring(node, encoding="utf-8").replace('\t', '')
-        for k in fields.keys():
+        for k in list(fields.keys()):
             if k not in fields_def:
                 del fields[k]
         for field in fields_def:
@@ -934,7 +939,7 @@ class view(osv.osv):
         return arch
 
     def read_template(self, cr, uid, xml_id, context=None):
-        if isinstance(xml_id, (int, long)):
+        if isinstance(xml_id, (int, int)):
             view_id = xml_id
         else:
             if '.' not in xml_id:
@@ -1092,12 +1097,12 @@ class view(osv.osv):
         _Node_Obj = self.pool[node_obj]
         _Arrow_Obj = self.pool[conn_obj]
 
-        for model_key,model_value in _Model_Obj._columns.items():
+        for model_key,model_value in list(_Model_Obj._columns.items()):
                 if model_value._type=='one2many':
                     if model_value._obj==node_obj:
                         _Node_Field=model_key
                         _Model_Field=model_value._fields_id
-                    for node_key,node_value in _Node_Obj._columns.items():
+                    for node_key,node_value in list(_Node_Obj._columns.items()):
                         if node_value._type=='one2many':
                              if node_value._obj==conn_obj:
                                  # _Source_Field = "Incoming Arrows" (connected via des_node)
@@ -1158,7 +1163,7 @@ class view(osv.osv):
                     GROUP BY coalesce(v.inherit_id, v.id)
                    """, (model,))
 
-        ids = map(itemgetter(0), cr.fetchall())
+        ids = list(map(itemgetter(0), cr.fetchall()))
         context = dict(load_all_views=True)
         return self._check_xml(cr, uid, ids, context=context)
 
@@ -1170,7 +1175,7 @@ class view(osv.osv):
         if self.pool._init:
             # only validate the views that are still existing...
             xmlid_filter = "AND md.name IN %s"
-            names = tuple(name for (xmod, name), (model, res_id) in self.pool.model_data_reference_ids.items() if xmod == module and model == self._name)
+            names = tuple(name for (xmod, name), (model, res_id) in list(self.pool.model_data_reference_ids.items()) if xmod == module and model == self._name)
             if not names:
                 # no views for this module, nothing to validate
                 return

@@ -7,6 +7,8 @@
 
 
 from __future__ import print_function
+from builtins import str
+from builtins import range
 to_19_fr = ( u'zéro',  'un',   'deux',  'trois', 'quatre',   'cinq',   'six',
           'sept', 'huit', 'neuf', 'dix',   'onze', 'douze', 'treize',
           'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf' )

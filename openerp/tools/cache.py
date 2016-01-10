@@ -1,3 +1,5 @@
+from past.builtins import basestring
+from builtins import object
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
@@ -200,8 +202,8 @@ def log_ormcache_stats(sig=None, frame=None):
     me = threading.currentThread()
     me_dbname = me.dbname
     entries = defaultdict(int)
-    for dbname, reg in RegistryManager.registries.iteritems():
-        for key in reg.cache.iterkeys():
+    for dbname, reg in RegistryManager.registries.items():
+        for key in reg.cache.keys():
             entries[(dbname,) + key[:2]] += 1
     for key, count in sorted(entries.items()):
         dbname, model_name, method = key

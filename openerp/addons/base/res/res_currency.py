@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from __future__ import division
+from builtins import str
+from past.utils import old_div
 import re
 import time
 import math
@@ -41,14 +44,14 @@ class res_currency(osv.osv):
         for id in ids:
             rounding = self.browse(cr, uid, id, context=context).rounding
             rounding = (0 < rounding < 1) and rounding or 1
-            res[id] = int(math.ceil(math.log10(1 / rounding)))
+            res[id] = int(math.ceil(math.log10(old_div(1, rounding))))
         return res
 
     def _decimal_places(self, cr, uid, ids, name, arg, context=None):
         res = {}
         for currency in self.browse(cr, uid, ids, context=context):
             if currency.rounding > 0 and currency.rounding < 1:
-                res[currency.id] = int(math.ceil(math.log10(1/currency.rounding)))
+                res[currency.id] = int(math.ceil(math.log10(old_div(1,currency.rounding))))
             else:
                 res[currency.id] = 0
         return res
@@ -99,7 +102,7 @@ class res_currency(osv.osv):
     def name_get(self, cr, uid, ids, context=None):
         if not ids:
             return []
-        if isinstance(ids, (int, long)):
+        if isinstance(ids, (int, int)):
             ids = [ids]
         reads = self.read(cr, uid, ids, ['name','symbol'], context=context, load='_classic_write')
         return [(x['id'], tools.ustr(x['name'])) for x in reads]
@@ -200,7 +203,7 @@ class res_currency(osv.osv):
         ctx = context.copy()
         from_currency = self.browse(cr, uid, from_currency.id, context=ctx)
         to_currency = self.browse(cr, uid, to_currency.id, context=ctx)
-        return to_currency.rate/from_currency.rate
+        return old_div(to_currency.rate,from_currency.rate)
 
     def _compute(self, cr, uid, from_currency, to_currency, from_amount, round=True, context=None):
         if (to_currency.id == from_currency.id):

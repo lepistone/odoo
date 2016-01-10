@@ -1,3 +1,4 @@
+from past.builtins import basestring
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
@@ -79,5 +80,5 @@ def trg_redirect(uid, res_type, res_id, new_rid, cr):
     :param new_rid: the model instance id to own the worfklow instance
     :param cr: a database cursor
     """
-    assert isinstance(new_rid, (long, int))
+    assert isinstance(new_rid, (int, int))
     return WorkflowService.new(cr, uid, res_type, res_id).redirect(new_rid)

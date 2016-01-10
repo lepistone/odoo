@@ -1,3 +1,7 @@
+from builtins import filter
+from builtins import str
+from builtins import map
+from builtins import object
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
@@ -115,7 +119,7 @@ def extract_rfc2822_addresses(text):
     """
     if not text: return []
     candidates = address_pattern.findall(tools.ustr(text).encode('utf-8'))
-    return filter(try_coerce_ascii, candidates)
+    return list(filter(try_coerce_ascii, candidates))
 
 def encode_rfc2822_address_header(header_text):
     """If ``header_text`` contains non-ASCII characters,
@@ -309,7 +313,7 @@ class ir_mail_server(osv.osv):
             msg['Bcc'] = encode_rfc2822_address_header(COMMASPACE.join(email_bcc))
         msg['Date'] = formatdate()
         # Custom headers may override normal headers or provide additional ones
-        for key, value in headers.iteritems():
+        for key, value in headers.items():
             msg[ustr(key).encode('utf-8')] = encode_header(value)
 
         if subtype == 'html' and not body_alternative and html2text:
@@ -414,7 +418,7 @@ class ir_mail_server(osv.osv):
         email_cc = message['Cc']
         email_bcc = message['Bcc']
         
-        smtp_to_list = filter(None, tools.flatten(map(extract_rfc2822_addresses,[email_to, email_cc, email_bcc])))
+        smtp_to_list = [_f for _f in tools.flatten(list(map(extract_rfc2822_addresses,[email_to, email_cc, email_bcc]))) if _f]
         assert smtp_to_list, self.NO_VALID_RECIPIENT
 
         x_forge_to = message['X-Forge-To']

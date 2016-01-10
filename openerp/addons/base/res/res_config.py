@@ -1,3 +1,5 @@
+from builtins import map
+from builtins import object
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import json
@@ -64,9 +66,7 @@ class res_config_configurable(osv.osv_memory):
             Todos.search(cr, uid, ['&', ('type', '=', 'automatic'), ('state','=','open')]),
                                     context=context)
 
-        user_groups = set(map(
-            lambda g: g.id,
-            self.pool['res.users'].browse(cr, uid, [uid], context=context)[0].groups_id))
+        user_groups = set([g.id for g in self.pool['res.users'].browse(cr, uid, [uid], context=context)[0].groups_id])
 
         valid_todos_for_user = [
             todo for todo in active_todos
@@ -270,8 +270,8 @@ class res_config_installer(osv.osv_memory, res_config_module_installation_mixin)
                   installer
         :rtype: [str]
         """
-        return map(attrgetter('name'),
-                   self._already_installed(cr, uid, context=context))
+        return list(map(attrgetter('name'),
+                   self._already_installed(cr, uid, context=context)))
 
     def _already_installed(self, cr, uid, context=None):
         """ For each module (boolean fields in a res.config.installer),
@@ -313,7 +313,7 @@ class res_config_installer(osv.osv_memory, res_config_module_installation_mixin)
         """
         base = set(module_name
                    for installer in self.read(cr, uid, ids, context=context)
-                   for module_name, to_install in installer.iteritems()
+                   for module_name, to_install in installer.items()
                    if module_name != 'id'
                    if type(self._columns.get(module_name)) is fields.boolean
                    if to_install)
@@ -326,7 +326,7 @@ class res_config_installer(osv.osv_memory, res_config_module_installation_mixin)
 
         additionals = set(
             module for requirements, consequences \
-                       in self._install_if.iteritems()
+                       in self._install_if.items()
                    if base.issuperset(requirements)
                    for module in consequences)
 
@@ -506,13 +506,13 @@ class res_config_settings(osv.osv_memory, res_config_module_installation_mixin):
             return ir_model_data.get_object(cr, uid, mod, xml, context=context)
 
         defaults, groups, modules, others = [], [], [], []
-        for name, field in self._columns.items():
+        for name, field in list(self._columns.items()):
             if name.startswith('default_') and hasattr(field, 'default_model'):
                 defaults.append((name, field.default_model, name[8:]))
             elif name.startswith('group_') and (isinstance(field, fields.boolean) or isinstance(field, fields.selection)) \
                  and hasattr(field, 'implied_group'):
                 field_groups = getattr(field, 'group', 'base.group_user').split(',')
-                groups.append((name, map(ref, field_groups), ref(field.implied_group)))
+                groups.append((name, list(map(ref, field_groups)), ref(field.implied_group)))
             elif name.startswith('module_') and (isinstance(field, fields.boolean) or isinstance(field, fields.selection)):
                 mod_ids = ir_module.search(cr, SUPERUSER_ID, [('name', '=', name[7:])])
                 record = ir_module.browse(cr, SUPERUSER_ID, mod_ids[0], context) if mod_ids else None
@@ -573,14 +573,14 @@ class res_config_settings(osv.osv_memory, res_config_module_installation_mixin):
 
         # group fields: modify group / implied groups
         for name, groups, implied_group in classified['group']:
-            gids = map(int, groups)
+            gids = list(map(int, groups))
             if config[name]:
                 res_groups.write(cr, uid, gids, {'implied_ids': [(4, implied_group.id)]}, context=context)
             else:
                 res_groups.write(cr, uid, gids, {'implied_ids': [(3, implied_group.id)]}, context=context)
                 uids = set()
                 for group in groups:
-                    uids.update(map(int, group.users))
+                    uids.update(list(map(int, group.users)))
                 implied_group.write({'users': [(3, u) for u in uids]})
 
         # other fields: execute all methods that start with 'set_'
@@ -634,7 +634,7 @@ class res_config_settings(osv.osv_memory, res_config_module_installation_mixin):
         if not ids:
             return []
         # name_get may receive int id instead of an id list
-        if isinstance(ids, (int, long)):
+        if isinstance(ids, (int, int)):
             ids = [ids]
 
         act_window = self.pool['ir.actions.act_window']

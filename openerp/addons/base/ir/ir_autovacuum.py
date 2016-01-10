@@ -13,7 +13,7 @@ class AutoVacuum(models.TransientModel):
 
 
     def _gc_transient_models(self, cr, uid, *args, **kwargs):
-        for model in self.pool.itervalues():
+        for model in self.pool.values():
             if model.is_transient():
                 model._transient_vacuum(cr, uid, force=True)
 

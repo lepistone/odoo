@@ -1,3 +1,4 @@
+from builtins import map
 import unittest
 
 import openerp
@@ -117,7 +118,7 @@ class test_expression(common.TransactionCase):
         for p in _partners:
             pids[p] = partners.create(cr, uid, {'name': p, 'category_id': [(6, 0, _partners[p])]})
 
-        base_domain = [('id', 'in', pids.values())]
+        base_domain = [('id', 'in', list(pids.values()))]
 
         def test(op, value, expected):
             ids = set(partners.search(cr, uid, base_domain + [('category_id', op, value)]))

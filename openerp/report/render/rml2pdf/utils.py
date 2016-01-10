@@ -1,3 +1,6 @@
+from builtins import map
+from builtins import str
+from past.builtins import basestring
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
@@ -141,7 +144,7 @@ def unit_get(size):
 def tuple_int_get(node, attr_name, default=None):
     if not node.get(attr_name):
         return default
-    return map(int, node.get(attr_name).split(','))
+    return list(map(int, node.get(attr_name).split(',')))
 
 def bool_get(value):
     return (str(value)=="1") or (value.lower()=='yes')

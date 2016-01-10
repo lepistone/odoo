@@ -1,7 +1,14 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import next
+from builtins import range
+from past.builtins import basestring
+from builtins import object
 # -*- coding: utf-8 -*-
 import collections
 import copy
-import cStringIO
+import io
 import datetime
 import hashlib
 import json
@@ -14,7 +21,7 @@ import sys
 import textwrap
 import uuid
 from subprocess import Popen, PIPE
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 import babel
 import babel.dates
@@ -54,7 +61,7 @@ def raise_qweb_exception(etype=None, **kw):
     try:
         raise etype, original, tb
     except etype as e:
-        for k, v in kw.items():
+        for k, v in list(kw.items()):
             e.qweb[k] = v
         # Will use `raise foo from bar` in python 3 and rename cause to __cause__
         e.qweb['cause'] = original
@@ -62,8 +69,8 @@ def raise_qweb_exception(etype=None, **kw):
 
 def _build_attribute(name, value):
     value = escape(value)
-    if isinstance(name, unicode): name = name.encode('utf-8')
-    if isinstance(value, unicode): value = value.encode('utf-8')
+    if isinstance(name, str): name = name.encode('utf-8')
+    if isinstance(value, str): value = value.encode('utf-8')
     return ' %s="%s"' % (name, value)
 
 class FileSystemLoader(object):
@@ -180,7 +187,7 @@ class QWeb(orm.AbstractModel):
         else:
             dom = etree.parse(document).getroot()
 
-        res_id = isinstance(name, (int, long)) and name or None
+        res_id = isinstance(name, (int, int)) and name or None
         for node in dom:
             if node.get('t-name') or (res_id and node.tag == "t"):
                 return node
@@ -201,7 +208,7 @@ class QWeb(orm.AbstractModel):
         if expr == "0":
             return qwebcontext.get(0, '')
         val = self.eval(expr, qwebcontext)
-        if isinstance(val, unicode):
+        if isinstance(val, str):
             return val.encode("utf8")
         if val is False or val is None:
             return ''
@@ -264,8 +271,8 @@ class QWeb(orm.AbstractModel):
             else:
                 _logger.warning("@t-debug in template '%s' is only available in --dev mode" % qwebcontext['__template__'])
 
-        for (attribute_name, attribute_value) in element.attrib.iteritems():
-            attribute_name = unicode(attribute_name)
+        for (attribute_name, attribute_value) in element.attrib.items():
+            attribute_name = str(attribute_name)
             if attribute_name == "groups":
                 cr = qwebcontext.get('request') and qwebcontext['request'].cr or None
                 uid = qwebcontext.get('request') and qwebcontext['request'].uid or None
@@ -299,7 +306,7 @@ class QWeb(orm.AbstractModel):
         if element.tail:
             result += self.render_tail(element.tail, element, qwebcontext)
 
-        if isinstance(result, unicode):
+        if isinstance(result, str):
             return result.encode('utf-8')
         return result
 
@@ -309,9 +316,9 @@ class QWeb(orm.AbstractModel):
         # generated_attributes: generated attributes
         # qwebcontext: values
         # inner: optional innerXml
-        name = unicode(element.tag)
+        name = str(element.tag)
         if inner:
-            g_inner = inner.encode('utf-8') if isinstance(inner, unicode) else inner
+            g_inner = inner.encode('utf-8') if isinstance(inner, str) else inner
         else:
             g_inner = [] if element.text is None else [self.render_text(element.text, element, qwebcontext)]
             for current_node in element.iterchildren(tag=etree.Element):
@@ -362,7 +369,7 @@ class QWeb(orm.AbstractModel):
 
         result = self.eval_object(attribute_value, qwebcontext)
         if isinstance(result, collections.Mapping):
-            return result.iteritems()
+            return iter(result.items())
         # assume tuple
         return [result]
 
@@ -379,9 +386,9 @@ class QWeb(orm.AbstractModel):
 
     def _iterate(self, iterable):
         if isinstance (iterable, collections.Mapping):
-            return iterable.iteritems()
+            return iter(iterable.items())
 
-        return itertools.izip(*itertools.tee(iterable))
+        return zip(*itertools.tee(iterable))
 
     def render_tag_foreach(self, element, template_attributes, generated_attributes, qwebcontext):
         expr = template_attributes["foreach"]
@@ -390,7 +397,7 @@ class QWeb(orm.AbstractModel):
             template = qwebcontext.get('__template__')
             raise QWebException("foreach enumerator %r is not defined while rendering template %r" % (expr, template), template=template)
         if isinstance(enum, int):
-            enum = range(enum)
+            enum = list(range(enum))
 
         varname = template_attributes['as'].replace('.', '_')
         copy_qwebcontext = qwebcontext.copy()
@@ -425,7 +432,7 @@ class QWeb(orm.AbstractModel):
                 })
             ru.append(self.render_element(element, template_attributes, generated_attributes, copy_qwebcontext))
 
-        for k in qwebcontext.keys():
+        for k in list(qwebcontext.keys()):
             qwebcontext[k] = copy_qwebcontext[k]
 
         return "".join(ru)
@@ -818,7 +825,7 @@ class ImageConverter(osv.AbstractModel):
 
     def value_to_html(self, cr, uid, value, field, options=None, context=None):
         try:
-            image = Image.open(cStringIO.StringIO(value.decode('base64')))
+            image = Image.open(io.StringIO(value.decode('base64')))
             image.verify()
         except IOError:
             raise ValueError("Non-image binary fields can not be converted to HTML")
@@ -1068,7 +1075,7 @@ class HTMLSafe(object):
         return self.string
     def __str__(self):
         s = self.string
-        if isinstance(s, unicode):
+        if isinstance(s, str):
             return s.encode('utf-8')
         return s
     def __unicode__(self):
@@ -1416,7 +1423,7 @@ class WebAsset(object):
 
     def stat(self):
         if not (self.inline or self._filename or self._ir_attach):
-            path = filter(None, self.url.split('/'))
+            path = [_f for _f in self.url.split('/') if _f]
             self._filename = get_resource_path(*path)
             if self._filename:
                 return

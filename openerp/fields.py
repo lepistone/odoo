@@ -2,6 +2,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 """ High-level objects for fields. """
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from past.builtins import basestring
+from builtins import object
 
 from collections import OrderedDict, defaultdict
 from datetime import date, datetime
@@ -10,12 +15,13 @@ from operator import attrgetter
 from types import NoneType
 import logging
 import pytz
-import xmlrpclib
+import xmlrpc.client
 
 from openerp.tools import float_round, frozendict, html_sanitize, ustr, OrderedSet
 from openerp.tools import DEFAULT_SERVER_DATE_FORMAT as DATE_FORMAT
 from openerp.tools import DEFAULT_SERVER_DATETIME_FORMAT as DATETIME_FORMAT
 from openerp.tools.translate import html_translate
+from future.utils import with_metaclass
 
 DATE_LENGTH = len(date.today().strftime(DATE_FORMAT))
 DATETIME_LENGTH = len(datetime.now().strftime(DATETIME_FORMAT))
@@ -120,7 +126,7 @@ class MetaField(type):
                 cls.description_attrs.append((attr[13:], attr))
 
 
-class Field(object):
+class Field(with_metaclass(MetaField, object)):
     """ The field descriptor contains the field definition, and manages accesses
         and assignments of the corresponding field on records. The following
         attributes may be provided when instanciating a field:
@@ -281,7 +287,6 @@ class Field(object):
                 state = fields.Selection(help="Blah blah blah")
 
     """
-    __metaclass__ = MetaField
 
     type = None                         # type of the field (string)
     relational = False                  # whether the field is a relational one
@@ -329,7 +334,7 @@ class Field(object):
 
     def __init__(self, string=None, **kwargs):
         kwargs['string'] = string
-        args = {key: val for key, val in kwargs.iteritems() if val is not None}
+        args = {key: val for key, val in kwargs.items() if val is not None}
         self.args = args or EMPTY_DICT
         self.setup_full_done = False
 
@@ -358,7 +363,7 @@ class Field(object):
         """ Set all field attributes at once (with slot defaults). """
         # optimization: we assign slots only
         assign = object.__setattr__
-        for key, val in self._slots.iteritems():
+        for key, val in self._slots.items():
             assign(self, key, attrs.pop(key, val))
         if attrs:
             assign(self, '_attrs', attrs)
@@ -536,7 +541,7 @@ class Field(object):
             if not getattr(self, attr):
                 setattr(self, attr, getattr(field, prop))
 
-        for attr, value in field._attrs.iteritems():
+        for attr, value in field._attrs.items():
             if attr not in self._attrs:
                 setattr(self, attr, value)
 
@@ -691,7 +696,7 @@ class Field(object):
         args = {}
         for attr, prop in self.column_attrs:
             args[attr] = getattr(self, prop)
-        for attr, value in self._attrs.iteritems():
+        for attr, value in self._attrs.items():
             args[attr] = value
 
         if self.company_dependent:
@@ -956,8 +961,8 @@ class Field(object):
         for field, path in records._field_triggers[self]:
             bymodel[field.model_name][path].append(field)
 
-        for model_name, bypath in bymodel.iteritems():
-            for path, fields in bypath.iteritems():
+        for model_name, bypath in bymodel.items():
+            for path, fields in bypath.items():
                 if path and any(field.store for field in fields):
                     # process stored fields
                     stored = set(field for field in fields if field.store)
@@ -1039,7 +1044,7 @@ class Integer(Field):
     def convert_to_read(self, value, use_name_get=True):
         # Integer values greater than 2^31-1 are not supported in pure XMLRPC,
         # so we have to pass them as floats :-(
-        if value and value > xmlrpclib.MAXINT:
+        if value and value > xmlrpc.client.MAXINT:
             return float(value)
         return value
 
@@ -1458,7 +1463,7 @@ class Selection(Field):
             if 'selection_add' in field.args:
                 # use an OrderedDict to update existing values
                 selection_add = field.args['selection_add']
-                self.selection = OrderedDict(self.selection + selection_add).items()
+                self.selection = list(OrderedDict(self.selection + selection_add).items())
 
     def _description_selection(self, env):
         """ return the selection list (pairs (value, label)); labels are
@@ -1637,7 +1642,7 @@ class Many2one(_Relational):
         super(Many2one, self)._setup_attrs(model, name)
         # determine self.delegate
         if not self.delegate:
-            self.delegate = name in model._inherits.values()
+            self.delegate = name in list(model._inherits.values())
 
     _column_ondelete = property(attrgetter('ondelete'))
     _column_auto_join = property(attrgetter('auto_join'))
@@ -1647,7 +1652,7 @@ class Many2one(_Relational):
         records._cache[self] = value
 
     def convert_to_cache(self, value, record, validate=True):
-        if isinstance(value, (NoneType, int, long)):
+        if isinstance(value, (NoneType, int, int)):
             return record.env[self.comodel_name].browse(value)
         if isinstance(value, BaseModel):
             if value._name == self.comodel_name and len(value) <= 1:

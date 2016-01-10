@@ -1,7 +1,9 @@
+from future import standard_library
+standard_library.install_aliases()
 # This test can be run stand-alone with something like:
 # > PYTHONPATH=. python2 openerp/tests/test_view_validation.py
 from lxml import etree
-from StringIO import StringIO
+from io import StringIO
 import unittest
 
 from openerp.tools.view_validation import (valid_page_in_book, valid_att_in_form, valid_type_in_colspan,

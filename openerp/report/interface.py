@@ -2,6 +2,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+from builtins import str
+from builtins import object
 import os
 import re
 
@@ -12,7 +17,7 @@ import openerp.tools as tools
 import openerp.modules
 from . import print_xml
 from . import render
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 from openerp import SUPERUSER_ID
 from openerp.report.render.rml2pdf import customfonts
@@ -149,7 +154,7 @@ class report_rml(report_int):
                 if 'href' in import_child.attrib:
                     imp_file = import_child.get('href')
                     _, imp_file = tools.file_open(imp_file, subdir=xsl_path, pathinfo=True)
-                    import_child.set('href', urllib.quote(str(imp_file)))
+                    import_child.set('href', urllib.parse.quote(str(imp_file)))
                     imp_file.close()
         finally:
             stylesheet_file.close()

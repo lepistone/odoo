@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from past.utils import old_div
 try:
-    import cStringIO as StringIO
+    import io as StringIO
 except ImportError:
-    import StringIO
+    import io
 
 from PIL import Image
 from PIL import ImageEnhance
@@ -49,7 +53,7 @@ def image_resize_image(base64_source, size=(1024, 1024), encoding='base64', file
         return False
     if size == (None, None):
         return base64_source
-    image_stream = StringIO.StringIO(base64_source.decode(encoding))
+    image_stream = io.StringIO(base64_source.decode(encoding))
     image = Image.open(image_stream)
     # store filetype here, as Image.new below will lose image.format
     filetype = (filetype or image.format).upper()
@@ -60,9 +64,9 @@ def image_resize_image(base64_source, size=(1024, 1024), encoding='base64', file
 
     asked_width, asked_height = size
     if asked_width is None:
-        asked_width = int(image.size[0] * (float(asked_height) / image.size[1]))
+        asked_width = int(image.size[0] * (old_div(float(asked_height), image.size[1])))
     if asked_height is None:
-        asked_height = int(image.size[1] * (float(asked_width) / image.size[0]))
+        asked_height = int(image.size[1] * (old_div(float(asked_width), image.size[0])))
     size = asked_width, asked_height
 
     # check image size: do not create a thumbnail if avoiding smaller images
@@ -74,7 +78,7 @@ def image_resize_image(base64_source, size=(1024, 1024), encoding='base64', file
     if image.mode not in ["1", "L", "P", "RGB", "RGBA"]:
         image = image.convert("RGB")
 
-    background_stream = StringIO.StringIO()
+    background_stream = io.StringIO()
     image.save(background_stream, filetype)
     return background_stream.getvalue().encode(encoding)
 
@@ -97,7 +101,7 @@ def image_resize_and_sharpen(image, size, preserve_aspect_ratio=False, factor=2.
     resized_image = sharpener.enhance(factor)
     # create a transparent image for background and paste the image on it
     image = Image.new('RGBA', size, (255, 255, 255, 0))
-    image.paste(resized_image, ((size[0] - resized_image.size[0]) / 2, (size[1] - resized_image.size[1]) / 2))
+    image.paste(resized_image, (old_div((size[0] - resized_image.size[0]), 2), old_div((size[1] - resized_image.size[1]), 2)))
     return image
 
 def image_save_for_web(image, fp=None, format=None):
@@ -124,7 +128,7 @@ def image_save_for_web(image, fp=None, format=None):
     if fp:
         image.save(fp, **opt)
     else:
-        img = StringIO.StringIO()
+        img = io.StringIO()
         image.save(img, **opt)
         return img.getvalue()
 
@@ -166,25 +170,25 @@ def crop_image(data, type='top', ratio=False, thumbnail_ratio=None, image_format
     """
     if not data:
         return False
-    image_stream = Image.open(StringIO.StringIO(data.decode('base64')))
-    output_stream = StringIO.StringIO()
+    image_stream = Image.open(io.StringIO(data.decode('base64')))
+    output_stream = io.StringIO()
     w, h = image_stream.size
     new_h = h
     new_w = w
 
     if ratio:
         w_ratio, h_ratio = ratio
-        new_h = (w * h_ratio) / w_ratio
+        new_h = old_div((w * h_ratio), w_ratio)
         new_w = w
         if new_h > h:
             new_h = h
-            new_w = (h * w_ratio) / h_ratio
+            new_w = old_div((h * w_ratio), h_ratio)
 
     if type == "top":
         cropped_image = image_stream.crop((0, 0, new_w, new_h))
         cropped_image.save(output_stream, format=image_format)
     elif type == "center":
-        cropped_image = image_stream.crop(((w - new_w) / 2, (h - new_h) / 2, (w + new_w) / 2, (h + new_h) / 2))
+        cropped_image = image_stream.crop((old_div((w - new_w), 2), old_div((h - new_h), 2), old_div((w + new_w), 2), old_div((h + new_h), 2)))
         cropped_image.save(output_stream, format=image_format)
     elif type == "bottom":
         cropped_image = image_stream.crop((0, h - new_h, new_w, h))
@@ -193,8 +197,8 @@ def crop_image(data, type='top', ratio=False, thumbnail_ratio=None, image_format
         raise ValueError('ERROR: invalid value for crop_type')
     # TDE FIXME: should not have a ratio, makes no sense -> should have maximum width (std: 64; 256 px)
     if thumbnail_ratio:
-        thumb_image = Image.open(StringIO.StringIO(output_stream.getvalue()))
-        thumb_image.thumbnail((new_w / thumbnail_ratio, new_h / thumbnail_ratio), Image.ANTIALIAS)
+        thumb_image = Image.open(io.StringIO(output_stream.getvalue()))
+        thumb_image.thumbnail((old_div(new_w, thumbnail_ratio), old_div(new_h, thumbnail_ratio)), Image.ANTIALIAS)
         thumb_image.save(output_stream, image_format)
     return output_stream.getvalue().encode('base64')
 
@@ -209,7 +213,7 @@ def image_colorize(original, randomize=True, color=(255, 255, 255)):
         :param color: background-color, if not randomize
     """
     # create a new image, based on the original one
-    original = Image.open(StringIO.StringIO(original))
+    original = Image.open(io.StringIO(original))
     image = Image.new('RGB', original.size)
     # generate the background color, past it as background
     if randomize:
@@ -217,7 +221,7 @@ def image_colorize(original, randomize=True, color=(255, 255, 255)):
     image.paste(color)
     image.paste(original, mask=original)
     # return the new image
-    buffer = StringIO.StringIO()
+    buffer = io.StringIO()
     image.save(buffer, 'PNG')
     return buffer.getvalue()
 

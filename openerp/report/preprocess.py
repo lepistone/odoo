@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from __future__ import print_function
+from builtins import object
 from lxml import etree
 import re
 rml_parents = ['tr','story','section']

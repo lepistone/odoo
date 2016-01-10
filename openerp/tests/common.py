@@ -4,6 +4,10 @@ The module :mod:`openerp.tests.common` provides unittest test cases and a few
 helpers and classes to write tests.
 
 """
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+from builtins import str
 import errno
 import glob
 import importlib
@@ -16,8 +20,8 @@ import threading
 import time
 import itertools
 import unittest
-import urllib2
-import xmlrpclib
+import urllib.request, urllib.error, urllib.parse
+import xmlrpc.client
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pprint import pformat
@@ -210,7 +214,7 @@ class SavepointCase(SingleTransactionCase):
         self.registry.clear_caches()
 
 
-class RedirectHandler(urllib2.HTTPRedirectHandler):
+class RedirectHandler(urllib.request.HTTPRedirectHandler):
     """
     HTTPRedirectHandler is predicated upon HTTPErrorProcessor being used and
     works by intercepting 3xy "errors".
@@ -238,9 +242,9 @@ class HttpCase(TransactionCase):
         super(HttpCase, self).__init__(methodName)
         # v8 api with correct xmlrpc exception handling.
         self.xmlrpc_url = url_8 = 'http://%s:%d/xmlrpc/2/' % (HOST, PORT)
-        self.xmlrpc_common = xmlrpclib.ServerProxy(url_8 + 'common')
-        self.xmlrpc_db = xmlrpclib.ServerProxy(url_8 + 'db')
-        self.xmlrpc_object = xmlrpclib.ServerProxy(url_8 + 'object')
+        self.xmlrpc_common = xmlrpc.client.ServerProxy(url_8 + 'common')
+        self.xmlrpc_db = xmlrpc.client.ServerProxy(url_8 + 'db')
+        self.xmlrpc_object = xmlrpc.client.ServerProxy(url_8 + 'object')
 
     def setUp(self):
         super(HttpCase, self).setUp()
@@ -251,11 +255,11 @@ class HttpCase(TransactionCase):
         self.session.db = get_db_name()
         openerp.http.root.session_store.save(self.session)
         # setup an url opener helper
-        self.opener = urllib2.OpenerDirector()
-        self.opener.add_handler(urllib2.UnknownHandler())
-        self.opener.add_handler(urllib2.HTTPHandler())
-        self.opener.add_handler(urllib2.HTTPSHandler())
-        self.opener.add_handler(urllib2.HTTPCookieProcessor())
+        self.opener = urllib.request.OpenerDirector()
+        self.opener.add_handler(urllib.request.UnknownHandler())
+        self.opener.add_handler(urllib.request.HTTPHandler())
+        self.opener.add_handler(urllib.request.HTTPSHandler())
+        self.opener.add_handler(urllib.request.HTTPCookieProcessor())
         self.opener.add_handler(RedirectHandler())
         self.opener.addheaders.append(('Cookie', 'session_id=%s' % self.session_id))
 

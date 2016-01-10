@@ -2,6 +2,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from __future__ import absolute_import
+from builtins import next
+from builtins import zip
+from builtins import str
+from past.builtins import basestring
+from builtins import object
 import codecs
 import csv
 import fnmatch
@@ -136,7 +141,7 @@ csv.register_dialect("UNIX", UNIX_LINE_TERMINATOR)
 # Helper functions for translating fields
 #
 def encode(s):
-    if isinstance(s, unicode):
+    if isinstance(s, str):
         return s.encode('utf8')
     return s
 
@@ -454,7 +459,7 @@ class TinyPoFile(object):
         lines = self.buffer.readlines()
         # remove the BOM (Byte Order Mark):
         if len(lines):
-            lines[0] = unicode(lines[0], 'utf8').lstrip(unicode( codecs.BOM_UTF8, "utf8"))
+            lines[0] = str(lines[0], 'utf8').lstrip(str( codecs.BOM_UTF8, "utf8"))
 
         lines.append('') # ensure that the file ends with at least an empty line
         return lines
@@ -462,7 +467,7 @@ class TinyPoFile(object):
     def cur_line(self):
         return self.lines_count - len(self.lines)
 
-    def next(self):
+    def __next__(self):
         trans_type = name = res_id = source = trad = None
         if self.extra_lines:
             trans_type, name, res_id, source, trad, comments = self.extra_lines.pop(0)
@@ -601,10 +606,10 @@ class TinyPoFile(object):
             # only strings in python code are python formated
             self.buffer.write("#, python-format\n")
 
-        if not isinstance(trad, unicode):
-            trad = unicode(trad, 'utf8')
-        if not isinstance(source, unicode):
-            source = unicode(source, 'utf8')
+        if not isinstance(trad, str):
+            trad = str(trad, 'utf8')
+        if not isinstance(source, str):
+            source = str(source, 'utf8')
 
         msg = "msgid %s\n"      \
               "msgstr %s\n\n"   \
@@ -652,7 +657,7 @@ def trans_export(lang, modules, buffer, format, cr):
                 module = row[0]
                 rows_by_module.setdefault(module, []).append(row)
             tmpdir = tempfile.mkdtemp()
-            for mod, modrows in rows_by_module.items():
+            for mod, modrows in list(rows_by_module.items()):
                 tmpmoddir = join(tmpdir, mod, 'i18n')
                 os.makedirs(tmpmoddir)
                 pofilename = (lang if lang else mod) + ".po" + ('t' if not lang else '')
@@ -870,7 +875,7 @@ def trans_generate(lang, modules, cr):
                 except (IOError, etree.XMLSyntaxError):
                     _logger.exception("couldn't export translation for report %s %s %s", name, report_type, fname)
 
-        for field_name, field_def in obj._fields.iteritems():
+        for field_name, field_def in obj._fields.items():
             if getattr(field_def, 'translate', None):
                 name = model + "," + field_name
                 try:
@@ -913,9 +918,7 @@ def trans_generate(lang, modules, cr):
         if model_obj._sql_constraints:
             push_local_constraints(module, model_obj, 'sql_constraints')
 
-    installed_modules = map(
-        lambda m: m['name'],
-        registry['ir.module.module'].search_read(cr, uid, [('state', '=', 'installed')], fields=['name']))
+    installed_modules = [m['name'] for m in registry['ir.module.module'].search_read(cr, uid, [('state', '=', 'installed')], fields=['name'])]
 
     path_list = [(path, True) for path in openerp.modules.module.ad_paths]
     # Also scan these non-addon paths
@@ -1088,7 +1091,7 @@ def trans_load_data(cr, fileobj, fileformat, lang, lang_name=None, verbose=True,
             dic = dict.fromkeys(('type', 'name', 'res_id', 'src', 'value',
                                  'comments', 'imd_model', 'imd_name', 'module'))
             dic['lang'] = lang
-            dic.update(zip(fields, row))
+            dic.update(list(zip(fields, row)))
 
             # discard the target from the POT targets.
             src = dic['src']
@@ -1102,7 +1105,7 @@ def trans_load_data(cr, fileobj, fileformat, lang, lang_name=None, verbose=True,
             if not res_id:
                 return
 
-            if isinstance(res_id, (int, long)) or \
+            if isinstance(res_id, (int, int)) or \
                     (isinstance(res_id, basestring) and res_id.isdigit()):
                 dic['res_id'] = int(res_id)
                 if module_name:
@@ -1126,7 +1129,7 @@ def trans_load_data(cr, fileobj, fileformat, lang, lang_name=None, verbose=True,
         # Then process the entries implied by the POT file (which is more
         # correct w.r.t. the targets) if some of them remain.
         pot_rows = []
-        for src, target in pot_targets.iteritems():
+        for src, target in pot_targets.items():
             if target.value:
                 for type, name, res_id in target.targets:
                     pot_rows.append((type, name, res_id, src, target.value, target.comments))

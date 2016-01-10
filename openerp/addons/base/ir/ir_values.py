@@ -1,3 +1,5 @@
+from builtins import str
+from past.builtins import basestring
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import pickle
@@ -221,7 +223,7 @@ class ir_values(osv.osv):
                                     match)
            :return: id of the newly created ir.values entry
         """
-        if isinstance(value, unicode):
+        if isinstance(value, str):
             value = value.encode('utf8')
         if company_id is True:
             # should be company-specific, need to get company id
@@ -316,7 +318,7 @@ class ir_values(osv.osv):
         for row in cr.dictfetchall():
             defaults.setdefault(row['name'],
                 (row['id'], row['name'], pickle.loads(row['value'].encode('utf-8'))))
-        return defaults.values()
+        return list(defaults.values())
 
     # use ormcache: this is called a lot by BaseModel.default_get()!
     @tools.ormcache('uid', 'model', 'condition')

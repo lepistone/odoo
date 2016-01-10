@@ -3,6 +3,7 @@
 """
 Store database-specific configuration parameters
 """
+from builtins import str
 
 import uuid
 import datetime
@@ -43,7 +44,7 @@ class ir_config_parameter(osv.osv):
         Initializes the parameters listed in _default_parameters.
         It overrides existing parameters if force is ``True``.
         """
-        for key, func in _default_parameters.iteritems():
+        for key, func in _default_parameters.items():
             # force=True skips search and always performs the 'if' body (because ids=False)
             ids = not force and self.search(cr, SUPERUSER_ID, [('key','=',key)])
             if not ids:

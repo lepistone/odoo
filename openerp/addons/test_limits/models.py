@@ -1,3 +1,4 @@
+from builtins import range
 # -*- coding: utf-8 -*-
 import time
 
@@ -30,7 +31,7 @@ class m(openerp.osv.osv.Model):
         t0 = time.clock()
         t1 = time.clock()
         while t1 - t0 < seconds:
-            for i in xrange(10000000):
+            for i in range(10000000):
                 x = i * i
             t1 = time.clock()
         return True

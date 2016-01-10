@@ -1,3 +1,8 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import map
+from past.builtins import basestring
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 from docutils import nodes
@@ -11,18 +16,18 @@ import os
 import re
 import shutil
 import tempfile
-import urllib
-import urllib2
-import urlparse
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
+import urllib.parse
 import zipfile
 import zipimport
 import lxml.html
 from openerp.exceptions import UserError
 
 try:
-    from cStringIO import StringIO
+    from io import StringIO
 except ImportError:
-    from StringIO import StringIO   # NOQA
+    from io import StringIO   # NOQA
 
 import openerp
 import openerp.exceptions
@@ -223,12 +228,12 @@ class module(osv.osv):
                 aa = v.inherit_id and '* INHERIT ' or ''
                 return '%s%s (%s)' % (aa, v.name, v.type)
 
-            res_mod_dic['views_by_module'] = map(format_view, browse('ir.ui.view'))
-            res_mod_dic['reports_by_module'] = map(attrgetter('name'), browse('ir.actions.report.xml'))
-            res_mod_dic['menus_by_module'] = map(attrgetter('complete_name'), browse('ir.ui.menu'))
+            res_mod_dic['views_by_module'] = list(map(format_view, browse('ir.ui.view')))
+            res_mod_dic['reports_by_module'] = list(map(attrgetter('name'), browse('ir.actions.report.xml')))
+            res_mod_dic['menus_by_module'] = list(map(attrgetter('complete_name'), browse('ir.ui.menu')))
 
-        for key in res.iterkeys():
-            for k, v in res[key].iteritems():
+        for key in res.keys():
+            for k, v in res[key].items():
                 res[key][k] = "\n".join(sorted(v))
         return res
 
@@ -317,7 +322,7 @@ class module(osv.osv):
     def unlink(self, cr, uid, ids, context=None):
         if not ids:
             return True
-        if isinstance(ids, (int, long)):
+        if isinstance(ids, (int, int)):
             ids = [ids]
         mod_names = []
         for mod in self.read(cr, uid, ids, ['state', 'name'], context):
@@ -587,7 +592,7 @@ class module(osv.osv):
                 if dep.module_id.state == 'installed' and dep.module_id not in todo:
                     todo.append(dep.module_id)
 
-        ids = map(lambda x: x.id, todo)
+        ids = [x.id for x in todo]
         self.write(cr, uid, ids, {'state': 'to upgrade'}, context=context)
 
         to_install = []
@@ -685,24 +690,24 @@ class module(osv.osv):
         if not self.pool['res.users'].has_group(cr, uid, 'base.group_system'):
             raise openerp.exceptions.AccessDenied()
 
-        apps_server = urlparse.urlparse(self.get_apps_server(cr, uid, context=context))
+        apps_server = urllib.parse.urlparse(self.get_apps_server(cr, uid, context=context))
 
         OPENERP = openerp.release.product_name.lower()
         tmp = tempfile.mkdtemp()
         _logger.debug('Install from url: %r', urls)
         try:
             # 1. Download & unzip missing modules
-            for module_name, url in urls.items():
+            for module_name, url in list(urls.items()):
                 if not url:
                     continue    # nothing to download, local version is already the last one
 
-                up = urlparse.urlparse(url)
+                up = urllib.parse.urlparse(url)
                 if up.scheme != apps_server.scheme or up.netloc != apps_server.netloc:
                     raise openerp.exceptions.AccessDenied()
 
                 try:
                     _logger.info('Downloading module `%s` from OpenERP Apps', module_name)
-                    content = urllib2.urlopen(url).read()
+                    content = urllib.request.urlopen(url).read()
                 except Exception:
                     _logger.exception('Failed to fetch module %s', module_name)
                     raise UserError(_('The `%s` module appears to be unavailable at the moment, please try again later.') % module_name)
@@ -711,7 +716,7 @@ class module(osv.osv):
                     assert os.path.isdir(os.path.join(tmp, module_name))
 
             # 2a. Copy/Replace module source in addons path
-            for module_name, url in urls.items():
+            for module_name, url in list(urls.items()):
                 if module_name == OPENERP or not url:
                     continue    # OPENERP is special case, handled below, and no URL means local module
                 module_path = modules.get_module_path(module_name, downloaded=True, display_warning=False)
@@ -743,11 +748,11 @@ class module(osv.osv):
 
             self.update_list(cr, uid, context=context)
 
-            with_urls = [m for m, u in urls.items() if u]
+            with_urls = [m for m, u in list(urls.items()) if u]
             downloaded_ids = self.search(cr, uid, [('name', 'in', with_urls)], context=context)
             already_installed = self.search(cr, uid, [('id', 'in', downloaded_ids), ('state', '=', 'installed')], context=context)
 
-            to_install_ids = self.search(cr, uid, [('name', 'in', urls.keys()), ('state', '=', 'uninstalled')], context=context)
+            to_install_ids = self.search(cr, uid, [('name', 'in', list(urls.keys())), ('state', '=', 'uninstalled')], context=context)
             post_install_action = self.button_immediate_install(cr, uid, to_install_ids, context=context)
 
             if already_installed:

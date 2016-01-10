@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import range
 import unittest
 
 from openerp.tests import common
@@ -95,13 +97,13 @@ class test_ir_sequence_date_range_change_implementation(common.SingleTransaction
         year = str(int(date.today().strftime("%Y")) - 1)
         dt = "{}-01-16".format(year)
         f = lambda *a: self.registry('ir.sequence').next_by_code(self.cr, self.uid, 'test_sequence_date_range_3', {})
-        assert all(str(x) == f() for x in xrange(1, 5))
+        assert all(str(x) == f() for x in range(1, 5))
         f = lambda *a: self.registry('ir.sequence').next_by_code(self.cr, self.uid, 'test_sequence_date_range_3', {'ir_sequence_date': dt})
-        assert all(str(x) == f() for x in xrange(1, 5))
+        assert all(str(x) == f() for x in range(1, 5))
         f = lambda *a: self.registry('ir.sequence').next_by_code(self.cr, self.uid, 'test_sequence_date_range_4', {})
-        assert all(str(x) == f() for x in xrange(1, 5))
+        assert all(str(x) == f() for x in range(1, 5))
         f = lambda *a: self.registry('ir.sequence').next_by_code(self.cr, self.uid, 'test_sequence_date_range_4', {'ir_sequence_date': dt})
-        assert all(str(x) == f() for x in xrange(1, 5))
+        assert all(str(x) == f() for x in range(1, 5))
 
     def test_ir_sequence_date_range_3_write(self):
         """swap the implementation method on both"""

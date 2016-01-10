@@ -4,6 +4,9 @@
 """ Models registries.
 
 """
+from __future__ import division
+from past.utils import old_div
+from builtins import object
 from collections import Mapping, defaultdict
 import logging
 import os
@@ -95,7 +98,7 @@ class Registry(Mapping):
     def pure_function_fields(self):
         """ Return the list of pure function fields (field objects) """
         fields = []
-        for mname, fnames in self._pure_function_fields.iteritems():
+        for mname, fnames in self._pure_function_fields.items():
             model_fields = self[mname]._fields
             for fname in fnames:
                 fields.append(model_fields[fname])
@@ -110,8 +113,8 @@ class Registry(Mapping):
         # map fields on their dependents
         dependents = {
             field: set(dep for dep, _ in model._field_triggers[field] if dep != field)
-            for model in self.itervalues()
-            for field in model._fields.itervalues()
+            for model in self.values()
+            for field in model._fields.values()
         }
         # sort them topologically, and associate a sequence number to each field
         mapping = {
@@ -141,7 +144,7 @@ class Registry(Mapping):
 
     def obj_list(self):
         """ Return the list of model names in this registry."""
-        return self.keys()
+        return list(self.keys())
 
     def add(self, model_name, model):
         """ Add or replace a model in the registry."""
@@ -187,18 +190,18 @@ class Registry(Mapping):
             ir_model.instanciate(cr, SUPERUSER_ID, model_name, transient, {})
 
         # prepare the setup on all models
-        for model in self.models.itervalues():
+        for model in self.models.values():
             model._prepare_setup(cr, SUPERUSER_ID)
 
         # do the actual setup from a clean state
         self._m2m = {}
-        for model in self.models.itervalues():
+        for model in self.models.values():
             model._setup_base(cr, SUPERUSER_ID, partial)
 
-        for model in self.models.itervalues():
+        for model in self.models.values():
             model._setup_fields(cr, SUPERUSER_ID)
 
-        for model in self.models.itervalues():
+        for model in self.models.values():
             model._setup_complete(cr, SUPERUSER_ID)
 
     def clear_caches(self):
@@ -207,7 +210,7 @@ class Registry(Mapping):
         ``tools.ormcache`` or ``tools.ormcache_multi`` for all the models.
         """
         self.cache.clear()
-        for model in self.models.itervalues():
+        for model in self.models.values():
             model.clear_caches()
 
     # Useful only in a multi-process context.
@@ -313,7 +316,7 @@ class RegistryManager(object):
                     # A registry takes 10MB of memory on average, so we reserve
                     # 10Mb (registry) + 5Mb (working memory) per registry
                     avgsz = 15 * 1024 * 1024
-                    size = int(config['limit_memory_soft'] / avgsz)
+                    size = int(old_div(config['limit_memory_soft'], avgsz))
 
             cls._registries = LRU(size)
         return cls._registries
@@ -419,7 +422,7 @@ class RegistryManager(object):
     def delete_all(cls):
         """Delete all the registries. """
         with cls.lock():
-            for db_name in cls.registries.keys():
+            for db_name in list(cls.registries.keys()):
                 cls.delete(db_name)
 
     @classmethod

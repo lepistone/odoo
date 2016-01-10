@@ -1,3 +1,4 @@
+from builtins import str
 # -*- coding: utf-8 -*-
 import openerp.modules.registry
 import openerp

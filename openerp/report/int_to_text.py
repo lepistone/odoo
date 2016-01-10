@@ -2,6 +2,9 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from __future__ import print_function
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 unites = {
     0: '', 1:'un', 2:'deux', 3:'trois', 4:'quatre', 5:'cinq', 6:'six', 7:'sept', 8:'huit', 9:'neuf',
     10:'dix', 11:'onze', 12:'douze', 13:'treize', 14:'quatorze', 15:'quinze', 16:'seize',
@@ -26,13 +29,13 @@ def _100_to_text(chiffre):
         return unites[chiffre]
     else:
         if chiffre%10>0:
-            return dizaine[chiffre / 10]+'-'+unites[chiffre % 10]
+            return dizaine[old_div(chiffre, 10)]+'-'+unites[chiffre % 10]
         else:
-            return dizaine[chiffre / 10]
+            return dizaine[old_div(chiffre, 10)]
 
 def _1000_to_text(chiffre):
     d = _100_to_text(chiffre % 100)
-    d2 = chiffre/100
+    d2 = old_div(chiffre,100)
     if d2>0 and d:
         return centaine[d2]+' '+d
     elif d2>1 and not d:
@@ -44,7 +47,7 @@ def _10000_to_text(chiffre):
     if chiffre==0:
         return 'zero'
     part1 = _1000_to_text(chiffre % 1000)
-    part2 = mille.get(chiffre / 1000,  _1000_to_text(chiffre / 1000)+' mille')
+    part2 = mille.get(old_div(chiffre, 1000),  _1000_to_text(old_div(chiffre, 1000))+' mille')
     if part2 and part1:
         part1 = ' '+part1
     return part2+part1

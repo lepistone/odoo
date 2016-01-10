@@ -1,3 +1,5 @@
+from past.builtins import basestring
+from builtins import object
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
@@ -393,7 +395,7 @@ class ir_translation(osv.osv):
         if isinstance(types, basestring):
             types = (types,)
         if res_id:
-            if isinstance(res_id, (int, long)):
+            if isinstance(res_id, (int, int)):
                 res_id = (res_id,)
             else:
                 res_id = tuple(res_id)
@@ -527,7 +529,7 @@ class ir_translation(osv.osv):
 
         # check for read/write access on translated field records
         fmode = 'read' if mode == 'read' else 'write'
-        for mname, ids in model_ids.iteritems():
+        for mname, ids in model_ids.items():
             records = self.env[mname].browse(ids)
             records.check_access_rights(fmode)
             records.check_field_access_rights(fmode, model_fields[mname])
@@ -633,7 +635,7 @@ class ir_translation(osv.osv):
             return ['&', ('res_id', '=', rec.id), ('name', '=', name)]
 
         # insert missing translations, and extend domain for related fields
-        for name, fld in record._fields.items():
+        for name, fld in list(record._fields.items()):
             if not getattr(fld, 'translate', False):
                 continue
 

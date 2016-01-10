@@ -49,7 +49,7 @@ class base_module_upgrade(osv.osv_memory):
         mod_obj = self.pool.get('ir.module.module')
         ids = self.get_module_list(cr, uid, context=context)
         res = mod_obj.read(cr, uid, ids, ['name','state'], context)
-        return {'module_info': '\n'.join(map(lambda x: x['name']+' : '+x['state'], res))}
+        return {'module_info': '\n'.join([x['name']+' : '+x['state'] for x in res])}
 
     def upgrade_module_cancel(self, cr, uid, ids, context=None):
         mod_obj = self.pool.get('ir.module.module')

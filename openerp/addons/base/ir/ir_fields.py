@@ -1,3 +1,8 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import map
+from builtins import str
+from past.builtins import basestring
 # -*- coding: utf-8 -*-
 import datetime
 import functools
@@ -12,10 +17,10 @@ from openerp.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FO
 
 REFERENCING_FIELDS = {None, 'id', '.id'}
 def only_ref_fields(record):
-    return {k: v for k, v in record.iteritems()
+    return {k: v for k, v in record.items()
             if k in REFERENCING_FIELDS}
 def exclude_ref_fields(record):
-    return {k: v for k, v in record.iteritems()
+    return {k: v for k, v in record.items()
             if k not in REFERENCING_FIELDS}
 
 CREATE = lambda values: (0, False, values)
@@ -44,7 +49,7 @@ class ir_fields_converter(models.AbstractModel):
             if isinstance(error_params, basestring):
                 error_params = sanitize(error_params)
             elif isinstance(error_params, dict):
-                error_params = {k: sanitize(v) for k, v in error_params.iteritems()}
+                error_params = {k: sanitize(v) for k, v in error_params.items()}
             elif isinstance(error_params, tuple):
                 error_params = tuple(map(sanitize, error_params))
         return error_type(error_msg % error_params, error_args)
@@ -65,12 +70,12 @@ class ir_fields_converter(models.AbstractModel):
 
         converters = {
             name: self.to_field(model, field, fromtype)
-            for name, field in model._fields.iteritems()
+            for name, field in model._fields.items()
         }
 
         def fn(record, log):
             converted = {}
-            for field, value in record.iteritems():
+            for field, value in record.items():
                 if field in REFERENCING_FIELDS:
                     continue
                 if not value:
@@ -270,14 +275,14 @@ class ir_fields_converter(models.AbstractModel):
         for item, label in selection:
             label = ustr(label)
             labels = [label] + self._get_translations(('selection', 'model', 'code'), label)
-            if value == unicode(item) or value in labels:
+            if value == str(item) or value in labels:
                 return item, []
 
         raise self._format_import_error(
             ValueError,
             _(u"Value '%s' not found in selection field '%%(field)s'"),
             value,
-            {'moreinfo': [_label or unicode(item) for item, _label in selection if _label or item]}
+            {'moreinfo': [_label or str(item) for item, _label in selection if _label or item]}
         )
 
     @api.model
@@ -370,7 +375,7 @@ class ir_fields_converter(models.AbstractModel):
         :rtype: str, list
         """
         # Can import by name_get, external id or database id
-        fieldset = set(record.iterkeys())
+        fieldset = set(record.keys())
         if fieldset - REFERENCING_FIELDS:
             raise ValueError(
                 _(u"Can not create Many-To-One records indirectly, import the field separately"))

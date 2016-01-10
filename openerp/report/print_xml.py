@@ -2,6 +2,10 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 from lxml import etree
 import openerp
 import openerp.tools as tools
@@ -26,11 +30,11 @@ class InheritDict(dict):
 
 def tounicode(val):
     if isinstance(val, str):
-        unicode_val = unicode(val, 'utf-8')
-    elif isinstance(val, unicode):
+        unicode_val = str(val, 'utf-8')
+    elif isinstance(val, str):
         unicode_val = val
     else:
-        unicode_val = unicode(val)
+        unicode_val = str(val)
     return unicode_val
 
 class document(object):
@@ -97,7 +101,7 @@ class document(object):
                     el = etree.SubElement(parent, node.tag)
                     el.text = tounicode(value)
 #TODO: test this
-                    for key, value in attrs.iteritems():
+                    for key, value in attrs.items():
                         if key not in ('type', 'name', 'default'):
                             el.set(key, value)
 
@@ -115,7 +119,7 @@ class document(object):
                         ext = fname.split('.')[-1].lower()
                         if ext in ('jpg','jpeg', 'png'):
                             import base64
-                            from StringIO import StringIO
+                            from io import StringIO
                             dt = base64.decodestring(datas['datas'])
                             fp = StringIO()
                             fp.write(dt)
@@ -151,7 +155,7 @@ class document(object):
                         if not value in vals:
                             vals[value]=[]
                         vals[value].append(b)
-                    keys = vals.keys()
+                    keys = list(vals.keys())
                     keys.sort()
 
                     if 'order' in attrs and attrs['order']=='desc':
@@ -190,7 +194,7 @@ class document(object):
                             el = etree.SubElement(parent, node.tag)
                             atr = self.node_attrs_get(node)
                             if 'value' in atr:
-                                if not isinstance(datas[atr['value']], (str, unicode)):
+                                if not isinstance(datas[atr['value']], (str, str)):
                                     txt = str(datas[atr['value']])
                                 else:
                                     txt = datas[atr['value']]

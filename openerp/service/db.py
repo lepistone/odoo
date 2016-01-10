@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import division
+from builtins import str
+from past.builtins import basestring
+from past.utils import old_div
 import json
 import logging
 import os
@@ -144,7 +148,7 @@ def exp_dump(db_name, format):
         return t.read().encode('base64')
 
 def dump_db_manifest(cr):
-    pg_version = "%d.%d" % divmod(cr._obj.connection.server_version / 100, 100)
+    pg_version = "%d.%d" % divmod(old_div(cr._obj.connection.server_version, 100), 100)
     cr.execute("SELECT name, latest_version FROM ir_module_module WHERE state = 'installed'")
     modules = dict(cr.fetchall())
     manifest = {

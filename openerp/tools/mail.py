@@ -1,3 +1,5 @@
+from builtins import str
+from past.builtins import basestring
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
@@ -196,7 +198,7 @@ def html_email_clean(html, remove=False, shorten=False, max_length=300, expand_o
         new_node = etree.Element(tag)
         new_node.text = text
         new_node.tail = tail
-        for key, val in attrs.iteritems():
+        for key, val in attrs.items():
             new_node.set(key, val)
         return new_node
 

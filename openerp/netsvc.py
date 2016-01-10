@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from __future__ import absolute_import
+from builtins import range
 import logging
 import logging.handlers
 import os
@@ -81,7 +82,7 @@ class PostgreSQLHandler(logging.Handler):
                 VALUES (NOW() at time zone 'UTC', %s, %s, %s, %s, %s, %s, %s, %s)
             """, val)
 
-BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, _NOTHING, DEFAULT = range(10)
+BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, _NOTHING, DEFAULT = list(range(10))
 #The background is set with 40 plus the number of the color, and the foreground with 30
 #These are the sequences need to get colored ouput
 RESET_SEQ = "\033[0m"

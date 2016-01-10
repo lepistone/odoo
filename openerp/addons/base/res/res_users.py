@@ -1,3 +1,9 @@
+from builtins import str
+from builtins import filter
+from builtins import zip
+from builtins import map
+from past.builtins import basestring
+from builtins import object
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import itertools
@@ -58,7 +64,7 @@ class res_groups(osv.osv):
             operand = [operand]
         where = []
         for group in operand:
-            values = filter(bool, group.split('/'))
+            values = list(filter(bool, group.split('/')))
             group_name = values.pop().strip()
             category_name = values and '/'.join(values).strip() or group_name
             group_domain = [('name', operator, lst and [group_name] or group_name)]
@@ -102,7 +108,7 @@ class res_groups(osv.osv):
             gs = self.browse(cr, uid, ids, context)
             gs.sort(key=lambda g: g.full_name, reverse=order.endswith('DESC'))
             gs = gs[offset:offset+limit] if limit else gs[offset:]
-            return map(int, gs)
+            return list(map(int, gs))
         return super(res_groups, self).search(cr, uid, args, offset, limit, order, context, count)
 
     def copy(self, cr, uid, id, default=None, context=None):
@@ -307,10 +313,10 @@ class res_users(osv.osv):
         result = super(res_users, self).read(cr, uid, ids, fields=fields, context=context, load=load)
         canwrite = self.pool['ir.model.access'].check(cr, uid, 'res.users', 'write', False)
         if not canwrite:
-            if isinstance(ids, (int, long)):
+            if isinstance(ids, (int, int)):
                 result = override_password(result)
             else:
-                result = map(override_password, result)
+                result = list(map(override_password, result))
 
         return result
 
@@ -351,7 +357,7 @@ class res_users(osv.osv):
                     raise UserError(_("You cannot unactivate the user you're currently logged in as."))
 
         if ids == [uid]:
-            for key in values.keys():
+            for key in list(values.keys()):
                 if not (key in self.SELF_WRITEABLE_FIELDS or key.startswith('context_')):
                     break
             else:
@@ -372,7 +378,7 @@ class res_users(osv.osv):
         # clear caches linked to the users
         self.pool['ir.model.access'].call_cache_clearing_methods(cr)
         clear = partial(self.pool['ir.rule'].clear_cache, cr)
-        map(clear, ids)
+        list(map(clear, ids))
         db = cr.dbname
         if db in self.__uid_cache:
             for id in ids:
@@ -607,7 +613,7 @@ class groups_implied(osv.osv):
 
         res = {}
         for g in self.browse(cr, SUPERUSER_ID, ids, context):
-            res[g.id] = map(int, computed_set(g))
+            res[g.id] = list(map(int, computed_set(g)))
         return res
 
     _columns = {
@@ -630,7 +636,7 @@ class groups_implied(osv.osv):
         if values.get('users') or values.get('implied_ids'):
             # add all implied groups (to all users of each group)
             for g in self.browse(cr, uid, ids, context=context):
-                gids = map(int, g.trans_implied_ids)
+                gids = list(map(int, g.trans_implied_ids))
                 vals = {'users': [(4, u.id) for u in g.users]}
                 super(groups_implied, self).write(cr, uid, gids, vals, context)
         return res
@@ -701,7 +707,7 @@ def get_boolean_group(name):
     return int(name[9:])
 
 def get_selection_groups(name):
-    return map(int, name[11:].split('_'))
+    return list(map(int, name[11:].split('_')))
 
 def partition(f, xs):
     "return a pair equivalent to (filter(f, xs), filter(lambda x: not f(x), xs))"
@@ -769,7 +775,7 @@ class groups_view(osv.osv):
                 attrs = {'groups': 'base.group_no_one'} if app and (app.xml_id == 'base.module_category_hidden' or app.xml_id == 'base.module_category_extra') else {}
                 if kind == 'selection':
                     # application name with a selection field
-                    field_name = name_selection_groups(map(int, gs))
+                    field_name = name_selection_groups(list(map(int, gs)))
                     xml1.append(E.field(name=field_name, **attrs))
                     xml1.append(E.newline())
                 else:
@@ -812,7 +818,7 @@ class groups_view(osv.osv):
                 for h in gs.intersection(g.trans_implied_ids):
                     order[h] -= 1
             # check whether order is total, i.e., sequence orders are distinct
-            if len(set(order.itervalues())) == len(gs):
+            if len(set(order.values())) == len(gs):
                 return sorted(gs, key=lambda g: order[g])
             return None
 
@@ -826,7 +832,7 @@ class groups_view(osv.osv):
                 others.append(g)
         # build the result
         res = []
-        apps = sorted(by_app.iterkeys(), key=lambda a: a.sequence or 0)
+        apps = sorted(iter(by_app.keys()), key=lambda a: a.sequence or 0)
         for app in apps:
             gs = linearized(by_app[app])
             if gs:
@@ -853,7 +859,7 @@ class users_view(osv.osv):
         add, rem = [], []
         values1 = {}
 
-        for key, val in values.iteritems():
+        for key, val in values.items():
             if is_boolean_group(key):
                 (add if val else rem).append(get_boolean_group(key))
             elif is_selection_groups(key):
@@ -865,7 +871,7 @@ class users_view(osv.osv):
 
         if 'groups_id' not in values and (add or rem):
             # remove group ids in `rem` and add group ids in `add`
-            values1['groups_id'] = zip(repeat(3), rem) + zip(repeat(4), add)
+            values1['groups_id'] = list(zip(repeat(3), rem)) + list(zip(repeat(4), add))
 
         return values1
 
@@ -893,7 +899,7 @@ class users_view(osv.osv):
 
     def read(self, cr, uid, ids, fields=None, context=None, load='_classic_read'):
         # determine whether reified groups fields are required, and which ones
-        fields1 = fields or self.fields_get(cr, uid, context=context).keys()
+        fields1 = fields or list(self.fields_get(cr, uid, context=context).keys())
         group_fields, other_fields = partition(is_reified_group, fields1)
 
         # read regular fields (other_fields); add 'groups_id' if necessary
@@ -934,7 +940,7 @@ class users_view(osv.osv):
             if kind == 'selection':
                 # selection group field
                 tips = ['%s: %s' % (g.name, g.comment) for g in gs if g.comment]
-                res[name_selection_groups(map(int, gs))] = {
+                res[name_selection_groups(list(map(int, gs)))] = {
                     'type': 'selection',
                     'string': app and app.name or _('Other'),
                     'selection': [(False, '')] + [(g.id, g.name) for g in gs],

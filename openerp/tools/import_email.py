@@ -1,3 +1,7 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
@@ -7,7 +11,7 @@ import smtplib
 import email, mimetypes
 from email.header import decode_header
 from email.mime.text import MIMEText
-import xmlrpclib
+import xmlrpc.client
 
 warn_msg = """
 Bonjour,
@@ -36,7 +40,7 @@ class CommandDispatcher(object):
 class RPCProxy(object):
 
     def __init__(self, uid, passwd, host='localhost', port=8069, path='object'):
-        self.rpc = xmlrpclib.ServerProxy('http://%s:%s/%s' % (host, port, path))
+        self.rpc = xmlrpc.client.ServerProxy('http://%s:%s/%s' % (host, port, path))
         self.user_id = uid
         self.passwd = passwd
     
@@ -80,7 +84,7 @@ class ReceiverEmail2Event(object):
             if charset:
                 subject += string.decode(charset)
             else:
-                subject += unicode(string)
+                subject += str(string)
         if partners:
             self.save_mail(msg, subject, partners)
         else:

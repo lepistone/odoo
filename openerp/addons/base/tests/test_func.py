@@ -15,7 +15,7 @@ class TestCompose(unittest.TestCase):
     def test_decorator(self):
         """ ensure compose() can be partially applied as a decorator
         """
-        @functools.partial(compose, unicode)
+        @functools.partial(compose, str)
         def mul(a, b):
             return a * b
 
